@@ -49,6 +49,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 .row.done input.cnt{border-color:var(--accent)}
 .dif.pos{color:var(--warn)} .dif.neg{color:var(--bad)} .dif.zero{color:var(--ok)}
 .del{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;border-radius:4px}
+.cat{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding:4px 2px;border-bottom:2px solid var(--fg);font-family:var(--f-display);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.cat small{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--muted)}
 .empty{color:var(--muted);text-align:center;padding:24px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
   padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
@@ -81,6 +83,7 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
   <div class="filters" id="filt">
     <button data-f="todos" aria-pressed="true">Todos</button>
     <button data-f="pend" aria-pressed="false">Pendientes</button>
+    <select id="selCat" aria-label="Categoría" style="font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg)"><option value="">Todas las categorías</option></select>
         <input id="q" placeholder="Buscar / código" aria-label="Buscar" style="flex:1;min-width:120px;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg)">
   </div>
 </header>
@@ -125,7 +128,7 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
 </div>
 
 <script>
-const KEY='conteo_guaripola_v4';
+const KEY='conteo_guaripola_v5';
 // Copia de bodega_productos (activos) al 17/10/2026: [codigo, nombre, stock]
 const sample=[
 ["7841044014164","2 CHESTERFIELD REMIX SUMMER X20 + 1 VASO DE REGALO",0],["7841044014522","3 MARLBORO CRAF + VASO GRATIS",0],["7841044014515","3 MARLBORO CRAF ICE + VASO GRATIS",0],
@@ -201,11 +204,24 @@ function tam(n){n=n.toUpperCase().replace(',','.');let m=n.match(SZ);
 function linea(n){return n.toUpperCase().replace(/^(CERVEZA|GASEOSA|ENERGIZANTE|LICOR|JUGOS?)\s+/,'')
   .replace(new RegExp(SZ.source,'g'),' ').replace(/\b(LATA|BOT|BOTELLA|BOTELLITA|RET|RETORNABLE|VIDRIO|PLASTICO|DESCARTABLES?|DESC|PET|TETRA|ORIGINAL|BOX|X1|II|I|LITRO)\b/g,' ')
   .replace(/\b\d+(\.\d+)?\s*$/,'').replace(/[^A-ZÑ0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
+// Categorías propias del formulario (no toca las del sistema)
+const CATS=[
+ ['Cervezas',/\b(OURO|BRAHMA|BRAHMITA|PILSEN|MUNICH|MICHELOB|BUD|BUDWEISER|POLAR|SKOL|BURGUESA|CONTI|CORONA|HEINEKEN|AMSTEL|MILLER|STELLA|PATAGONIA|EISENBAHN|ANTARCTICA)\b/],
+ ['Tragos listos',/\b(SMIRNOFF|DR\.? LEMON|MIKES)\b/],
+ ['Gaseosas',/\b(COCA|FANTA|SPRITE|CRUSH|PEPSI|MIRINDA|PULP|NIKO|PASO|SCHWEPPES|TONICA|TAMBURI|ISAAC|KAMPITO)\b|DE LA COSTA (COLA|GUARANA)/],
+ ['Aguas y jugos',/\b(AGUA|AQUARIUS|POWERADE|FRUGOS|JUGO|JUGOS|KAPO|DEL VALLE)\b/],
+ ['Energizantes',/\b(ENERGIZANTE|MONSTER|RED BULL|DARK DOG)\b/],
+ ['Destilados y licores',/\b(CAÑA|ARISTOCRATA|FORTIN|RON|WHISKY|JACK|GIN|VODKA|CACHAZA|LICOR|APEROL|CINZANO|GANCIA|FERNET)\b/],
+ ['Vinos y sidras',/\b(VINO|SIDRA)\b/],
+ ['Cigarrillos',/\b(MARLBORO|KENT|KENTUCKY|KENTUKY|LUCKY|PALERMO|CHESTERFIELD|CHESTER|SAN MARINO|PODS|PAPEL DE CIGARRILLO|ENCENDEDOR)\b/],
+ ['Hielo y carbón',/\b(HIELO|CARBON)\b/],
+ ['Golosinas y snacks',/\b(CARAMELO|CHICLE|PAPAS|PRINGLES)\b/]];
+function cat(n){n=n.toUpperCase();for(const [c,re] of CATS)if(re.test(n))return c;return 'Otros'}
 const ALIAS={BRAHMITA:'BRAHMA',KENTUKY:'KENTUCKY',CHESTER:'CHESTERFIELD',DELVALLE:'FRUGOS'};
 function marca(l){const w=l.replace(/^\d+\s+/,'').split(' ')[0]||l;return ALIAS[w]||w}
-function ordenar(a){const o=a.map(i=>{const l=linea(i.n).replace(/\bCERO\b/g,'ZERO');return {i,l,m:marca(l),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:VENTAS[i.c||i.n]||0}});
-  const tl={},tm={};o.forEach(x=>{tl[x.l]=(tl[x.l]||0)+x.v;tm[x.m]=(tm[x.m]||0)+x.v});
-  return o.sort((x,y)=>tm[y.m]-tm[x.m]||x.m.localeCompare(y.m,'es')||tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
+function ordenar(a){const o=a.map(i=>{const l=linea(i.n).replace(/\bCERO\b/g,'ZERO');return {i,l,g:cat(i.n),m:marca(l),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:VENTAS[i.c||i.n]||0}});
+  const tl={},tm={},tg={};o.forEach(x=>{tl[x.l]=(tl[x.l]||0)+x.v;tm[x.m]=(tm[x.m]||0)+x.v;tg[x.g]=(tg[x.g]||0)+x.v});
+  return o.sort((x,y)=>(x.g==='Otros')-(y.g==='Otros')||tg[y.g]-tg[x.g]||x.g.localeCompare(y.g,'es')||tm[y.m]-tm[x.m]||x.m.localeCompare(y.m,'es')||tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
 let st={fecha:new Date().toISOString().slice(0,10),resp:'',items:ordenar(sample.map(([c,n,s])=>({c,n,s,k:null}))),f:'todos'};
 try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
 const $=id=>document.getElementById(id);
@@ -219,12 +235,17 @@ function render(){
   document.querySelectorAll('#filt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===st.f));
   const rows=st.items.map((i,ix)=>({i,ix})).filter(({i})=>{
     if(st.f==='pend'&&i.k!=null)return false;
+    if(st.g&&cat(i.n)!==st.g)return false;
     return !q||i.n.toLowerCase().includes(q)||String(i.c).includes(q);
   });
   const L=$('list');
   L.innerHTML='<div class="row head"><span>Producto</span><span class="num">Cantidad</span><span></span></div>';
   if(!rows.length){L.insertAdjacentHTML('beforeend','<div class="empty">Sin productos en este filtro.</div>');return}
+  const cc={};st.items.forEach(i=>{const g=cat(i.n);cc[g]=cc[g]||[0,0];cc[g][1]++;if(i.k!=null)cc[g][0]++});
+  let prev=null;
   rows.forEach(({i,ix})=>{
+    const g=cat(i.n);if(g!==prev){prev=g;const h=document.createElement('div');h.className='cat';
+      h.innerHTML='<span></span><small></small>';h.firstChild.textContent=g;h.lastChild.textContent=cc[g][0]+'/'+cc[g][1];L.appendChild(h)}
     const r=document.createElement('div');r.className='row'+(i.k!=null?' done':'');
     r.innerHTML=`<div class="name"><div></div><small></small></div>      <input class="cnt" id="c${ix}" type="number" inputmode="decimal" value="${i.k??''}" aria-label="Conteo">
       <button class="del" aria-label="Quitar" title="Quitar">×</button>`;
@@ -240,6 +261,9 @@ function render(){
 $('fecha').onchange=e=>{st.fecha=e.target.value;save()};
 $('resp').oninput=e=>{st.resp=e.target.value;save()};
 $('q').oninput=render;
+CATS.map(c=>c[0]).concat('Otros').filter(g=>st.items.some(i=>cat(i.n)===g)).sort((a,b)=>st.items.findIndex(i=>cat(i.n)===a)-st.items.findIndex(i=>cat(i.n)===b))
+  .forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;$('selCat').appendChild(o)});
+$('selCat').value=st.g||'';$('selCat').onchange=e=>{st.g=e.target.value;save();render()};
 $('filt').onclick=e=>{const b=e.target.closest('button');if(b){st.f=b.dataset.f;save();render()}};
 $('add').onsubmit=e=>{
   e.preventDefault();const v=$('aName').value.trim();const n=Number($('aQty').value||1);if(!v)return;
