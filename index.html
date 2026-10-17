@@ -125,7 +125,7 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
 </div>
 
 <script>
-const KEY='conteo_guaripola_v3';
+const KEY='conteo_guaripola_v4';
 // Copia de bodega_productos (activos) al 17/10/2026: [codigo, nombre, stock]
 const sample=[
 ["7841044014164","2 CHESTERFIELD REMIX SUMMER X20 + 1 VASO DE REGALO",0],["7841044014522","3 MARLBORO CRAF + VASO GRATIS",0],["7841044014515","3 MARLBORO CRAF ICE + VASO GRATIS",0],
@@ -201,9 +201,11 @@ function tam(n){n=n.toUpperCase().replace(',','.');let m=n.match(SZ);
 function linea(n){return n.toUpperCase().replace(/^(CERVEZA|GASEOSA|ENERGIZANTE|LICOR|JUGOS?)\s+/,'')
   .replace(new RegExp(SZ.source,'g'),' ').replace(/\b(LATA|BOT|BOTELLA|BOTELLITA|RET|RETORNABLE|VIDRIO|PLASTICO|DESCARTABLES?|DESC|PET|TETRA|ORIGINAL|BOX|X1|II|I|LITRO)\b/g,' ')
   .replace(/\b\d+(\.\d+)?\s*$/,'').replace(/[^A-ZÑ0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
-function ordenar(a){const o=a.map(i=>({i,l:linea(i.n),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:VENTAS[i.c||i.n]||0}));
-  const tl={};o.forEach(x=>tl[x.l]=(tl[x.l]||0)+x.v);
-  return o.sort((x,y)=>tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
+const ALIAS={BRAHMITA:'BRAHMA',KENTUKY:'KENTUCKY',CHESTER:'CHESTERFIELD',DELVALLE:'FRUGOS'};
+function marca(l){const w=l.replace(/^\d+\s+/,'').split(' ')[0]||l;return ALIAS[w]||w}
+function ordenar(a){const o=a.map(i=>{const l=linea(i.n).replace(/\bCERO\b/g,'ZERO');return {i,l,m:marca(l),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:VENTAS[i.c||i.n]||0}});
+  const tl={},tm={};o.forEach(x=>{tl[x.l]=(tl[x.l]||0)+x.v;tm[x.m]=(tm[x.m]||0)+x.v});
+  return o.sort((x,y)=>tm[y.m]-tm[x.m]||x.m.localeCompare(y.m,'es')||tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
 let st={fecha:new Date().toISOString().slice(0,10),resp:'',items:ordenar(sample.map(([c,n,s])=>({c,n,s,k:null}))),f:'todos'};
 try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
 const $=id=>document.getElementById(id);
