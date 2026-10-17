@@ -1,0 +1,326 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Conteo Guaripola</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}
+/* Layout: barra fija arriba (resumen), lista de filas tipo planilla de depósito, entrada rápida abajo */
+:root{
+  --bg:#f3f5f2; --surface:#ffffff; --fg:#1b2420; --muted:#5e6b64; --line:#d9dfdb;
+  --accent:#0f7a52; --accent-fg:#ffffff; --ok:#0f7a52; --warn:#b26b00; --bad:#c0362c; --chip:#e7ece9;
+  --f-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1a221e; --fg:#e6ece8; --muted:#97a59d; --line:#2c3832;
+  --accent:#3fbf86; --accent-fg:#0b1410; --ok:#3fbf86; --warn:#e3a43b; --bad:#ef6b5f; --chip:#24302a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1a221e; --fg:#e6ece8; --muted:#97a59d; --line:#2c3832;
+  --accent:#3fbf86; --accent-fg:#0b1410; --ok:#3fbf86; --warn:#e3a43b; --bad:#ef6b5f; --chip:#24302a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 120px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:820px;margin:0 auto;display:grid;gap:12px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:grid;gap:10px}
+h1{font-family:var(--f-display);font-size:28px;margin:0;letter-spacing:.02em;text-transform:uppercase}
+.meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.meta input{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--fg);min-width:0}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.stat b{display:block;font-family:var(--f-mono);font-size:18px;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat.bad b{color:var(--bad)} .stat.ok b{color:var(--ok)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button,.btn{font:inherit;font-size:13px;padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--chip);color:var(--fg);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);border-radius:6px;font-weight:600}
+.btn.ghost{border-radius:6px;background:transparent}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.list{display:grid;gap:6px}
+.row{display:grid;grid-template-columns:1fr 96px 32px;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.row.head{background:transparent;border:0;padding-block:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.name{min-width:0}
+.name div{font-weight:500;overflow-wrap:anywhere}
+.name small{color:var(--muted);font-family:var(--f-mono);font-size:11px}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
+.row input.cnt{width:100%;font:500 16px var(--f-mono);text-align:right;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.row.done input.cnt{border-color:var(--accent)}
+.dif.pos{color:var(--warn)} .dif.neg{color:var(--bad)} .dif.zero{color:var(--ok)}
+.del{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;border-radius:4px}
+.empty{color:var(--muted);text-align:center;padding:24px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
+  padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.bar form{max-width:820px;margin:0 auto;display:grid;grid-template-columns:1fr 80px auto;gap:8px}
+.bar input{font:inherit;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);min-width:0}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+.note{font-size:12px;color:var(--muted)}
+textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
+@media (max-width:520px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .row{grid-template-columns:1fr 90px 28px}
+  .row .sis{display:none}
+  .row.head .sis{display:none}
+}
+</style></head><body>
+
+<div class="wrap">
+<header>
+  <h1>Conteo de stock</h1>
+  <div class="meta">
+    <input id="fecha" type="date" aria-label="Fecha">
+    <input id="resp" placeholder="Responsable" aria-label="Responsable" style="flex:1">
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="sTot">0</b><span>Productos</span></div>
+    <div class="stat ok"><b id="sCont">0</b><span>Contados</span></div>
+    <div class="stat bad"><b id="sDif">0</b><span>Pendientes</span></div>
+  </div>
+  <div class="filters" id="filt">
+    <button data-f="todos" aria-pressed="true">Todos</button>
+    <button data-f="pend" aria-pressed="false">Pendientes</button>
+        <input id="q" placeholder="Buscar / código" aria-label="Buscar" style="flex:1;min-width:120px;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg)">
+  </div>
+</header>
+
+<div class="list" id="list"></div>
+
+<div class="tools"><button class="btn primary" id="bSend">Enviar conteo</button><span class="note" id="sendMsg" aria-live="polite"></span></div>
+
+<div class="tools">
+  <a class="btn ghost" id="bWa" href="https://wa.me/" target="_blank" rel="noopener" style="text-decoration:none">Enviar por WhatsApp</a>
+  <button class="btn ghost" id="bCsv">Exportar CSV</button>
+  <button class="btn ghost" id="bResumen">Resumen WhatsApp</button>
+  <button class="btn ghost" id="bPaste">Cargar lista</button>
+  <button class="btn ghost" id="bReset">Nuevo conteo</button>
+</div>
+<div class="tools"><button class="btn ghost" id="bHist">Historial</button></div>
+<section id="hist" hidden style="display:grid;gap:8px">
+  <h2 style="font-family:var(--f-display);font-size:20px;margin:8px 0 0;text-transform:uppercase;letter-spacing:.02em">Historial de conteos</h2>
+  <form id="pinF" class="meta">
+    <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN" aria-label="PIN" style="width:120px">
+    <input id="hDesde" type="date" aria-label="Desde">
+    <button class="btn primary" type="submit">Ver</button>
+    <span class="note" id="hMsg" aria-live="polite"></span>
+  </form>
+  <div class="list" id="hList"></div>
+</section>
+<div id="resetBox" class="confirm" hidden>¿Borrar todo el conteo? <button class="btn primary" id="rYes">Sí, borrar</button><button class="btn ghost" id="rNo">Cancelar</button></div>
+<div id="outBox" hidden>
+  <p class="note" id="outNote"></p>
+  <textarea id="out"></textarea>
+  <div class="tools"><button class="btn primary" id="bCopy">Copiar</button><button class="btn ghost" id="bApply" hidden>Cargar</button><button class="btn ghost" id="bClose">Cerrar</button></div>
+</div>
+<p class="note">Productos del sistema, los más vendidos (90 días) primero. Se guarda en este navegador. "Cargar lista": pegar <code>codigo;producto</code> por línea (desde Excel o Supabase).</p>
+</div>
+
+<div class="bar">
+  <form id="add">
+    <input id="aName" placeholder="Código o producto nuevo" aria-label="Producto" autocomplete="off">
+    <input id="aQty" type="number" inputmode="decimal" placeholder="Cant." aria-label="Cantidad">
+    <button class="btn primary" type="submit">Sumar</button>
+  </form>
+</div>
+
+<script>
+const KEY='conteo_guaripola_v3';
+// Copia de bodega_productos (activos) al 17/10/2026: [codigo, nombre, stock]
+const sample=[
+["7841044014164","2 CHESTERFIELD REMIX SUMMER X20 + 1 VASO DE REGALO",0],["7841044014522","3 MARLBORO CRAF + VASO GRATIS",0],["7841044014515","3 MARLBORO CRAF ICE + VASO GRATIS",0],
+["7840058003874","AGUA CON GAS DASANI DESCARTABLE 2250 ML",1],["7840058002105","AGUA CON GAS DASANI DESCARTABLE 500 ML",-2],["7840981000100","AGUA CON GAS DE LA COSTA DESCARTABLE 2 L",0],["7840981000094","AGUA CON GAS DE LA COSTA DESCARTABLE 500 ML",5],
+["7840058008404","AGUA SIN GAS BENEDICTINO DESCARTABLE 2 L",0],["7840058008381","AGUA SIN GAS BENEDICTINO DESCARTABLE 500ML",2],["7840058010117","AGUA SIN GAS DASANI 990ML",-5],["7840058006561","AGUA SIN GAS DASANI DESCARTABLE 3 L",0],["7840058008893","AGUA SIN GAS DASANI DESCARTABLE 500ML",-1],["7840058004215","AGUA SIN GAS DASANI DESCARTABLE 990 ML",12],
+["7840981000056","AGUA SIN GAS DE LA COSTA DESCARTABLE 2 L",0],["7840981000049","AGUA SIN GAS DE LA COSTA DESCARTABLE 500 ML",0],["7840028202450","AGUA TONICA PASO DE LOS TOROS DESCARTABLE 500 ML",-1],["7840058007582","AGUA TONICA SCHWEPPES DESCARTABLE 2 L",9],["7840058001443","AGUA TONICA SCHWEPPES DESCARTABLE 500 ML",1],
+["7802100006080","AMSTEL BOTELLITA 250ML",0],["8712000056445","AMSTEL LAGER BOT. 650 ML",0],["7802100005472","AMSTEL LAGER BOT. 650 ML I",0],["8712000055400","AMSTEL LAGER LATA 250 ML",0],["7896045505319","AMSTEL LAGER LATA 269 ML",0],["7840050006491","ANTARCTICA PILSEN LATA 269 ML",0],["7891136057029","APEROL APERITIVO BOT. 750 ML",0],
+["7840058003416","AQUARIUS MANZANA DESCARTABLE 1.5L",0],["7840058003812","AQUARIUS NARANJA DESCARTABLE 1.5L",2],["7840058005229","AQUARIUS POMELO DESCARTABLE 1.5 L",2],["5846402030116","ARISTOCRATA ETIQUETA ROJA 750",0],
+["00001234","ASADITO CERDO",0],["000012","ASADITO POLLO",0],["00010","ASADITOS CARNE",0],["00O91","BOTELLA CERVEPAR 1L",0],["00091","BOTELLA CERVEPAR 710ML",0],
+["7840050002493","BRAHMA LATA 269 ML",0],["78410848","BRAHMA RET VIDRIO 340 ML",4],["78400030","BRAHMA RET VIDRIO 940 ML",34],["7840050003001","BRAHMA SZ 340 VIDRIO RET",0],["7840050002561","BRAHMA SZ LATA 269 ML",0],["7840050009614","BRAHMA ULTRA CERO 940 ML",0],["7840050008655","BRAHMA ULTRA ZERO",62],["7840050009256","BRAHMITA LATA 269 ML PABLITO LEZCANO",0],
+["7840050003704","BUD 66 LATA 269 ML",18],["7840050003605","BUD 66 LATA 310 ML",32],["7840050008372","BUD 66 RET VIDRIO 710 ML",11],["7840050003803","BUDWEISER LATA 269 ML",-12],["7898295301437","BURGUESA LATA 269 ML",58],["7896050200131","CACHAZA VELHO BARREIRO TRADICIONAL BOT. 910 ML",0],
+["7840002010019","CAÑA ARISTOCRATA ETIQUETA NEGRA BOT. 750 ML",0],["78400498","CAÑA ARISTOCRATA ETIQUETA NEGRA DESCARTABLE 200 ML",9],["78400528","CAÑA FORTIN AÑEJADA ESPECIAL DESCARTABLE 200 ML",22],["7840138000021","CAÑA FORTIN DESCARTABLE 450 ML",1],["7840138000137","CAÑA FORTIN ETIQUETA NEGRA BOT. 475 ML",-1],["7840138000038","CAÑA FORTIN ETIQUETA NEGRA BOT. 750ML",2],["78401037","CAÑA FORTIN ETIQUETA NEGRA DESCARTABLE 200 ML",0],
+["7840027210005","CAÑA TRES LEONES ESPECIAL DESCARTABLE 190 ML",11],["7840027040008","CAÑA TRES LEONES ESPECIAL DESCARTABLE 425 ML",1],["7840027340009","CAÑA TRES LEONES ETIQUETA NEGRA BOT. 420 ML",2],["7840027320001","CAÑA TRES LEONES ETIQUETA NEGRA BOT. 750 ML",3],["7840027130006","CAÑA TRES LEONES ETIQUETA NEGRA DESCARTABLE 190 ML",11],
+["78938816","CARAMELO HALLS EXTRA FORTE 28G",1],["78938793","CARAMELO HALLS HALLS 28G",-4],["78938823","CARAMELO HALLS MENTOL 28G",-3],["78938861","CARAMELO HALLS UVA VERDE 28G",20],["00036","CARBON 3KG",-54],["00037","CARBON 5KG",0],
+["7802100005526","CERVEZA AMSTEL LARGE PURA MALTA 269 ML",0],["7840050008549","CERVEZA BUDWEISER 66 BOTELLITA 275 ML",0],["7891149108718","CERVEZA CORONA BOT. 330 ML",0],["7898367984285","CERVEZA EISENBAHN PILSEN LATA 269 ML",0],["7898367983790","CERVEZA EISENBAHN PILSEN LATA 350ML",0],["7898032910267","CERVEZA MILLER HIGH LIFE 269ML",34],["7840025000219","CERVEZA MUNICH ULTRA BOTELLA 600 ML",0],
+["7840050002783","CERVEZA PILSEN BOTELLA RETORNABLE 340ML",0],["7840050002806","CERVEZA PILSEN BOTELLA RETORNABLE 710ML",0],["7840050004992","CERVEZA PILSEN LATA 269ML",18],["7840050007696","CERVEZA PILSEN LATA 355ML",30],["7840050002905","CERVEZA PILSEN OLIMPIA 940ML",0],
+["7841044013860","CHESTER REMIX FRESH 20 + MAXIBIC",0],["7841044014171","CHESTERFIELD DE 20 REMIX SUMMER C/ ENCENDEDOR",0],["78419322","CHESTERFIELD FRESH 11 S",0],["78412408","CHESTERFIELD FRESH 20 S",4],["78409002","CHESTERFIELD ORIGINAL 20 S",0],["78421875","CHESTERFIELD ORIGINAL SOFT 20 S",0],["78419339","CHESTERFIELD REMIX 11 S",0],["78413658","CHESTERFIELD REMIX 20 S",0],["7841044013877","CHESTERFIELD REMIX SPLASH 20 + ENCENDEDOR",0],["78421844","CHESTERFIELD SPLASH20 S",0],
+["77969088","CHICLE BELDENT MENTA FUERTE SIN AZUCAR 20 G",15],["77969071","CHICLE BELDENT MENTA POSEIDON SIN AZUCAR 10 G",-1],["77969095","CHICLE BELDENT MENTOL POSEIDON SIN AZUCAR 10 G",0],["78927995","CHICLE POOSH HORTELA 200 G II",33],["78024465","CHICLE TOPLINE SEVEN X-POSITIVE MINT",6],["78024472","CHICLE TOPLINE SEVEN XBOMBS SIN AZUCAR 14.7 G",0],["77921246","CHICLE TOPLINE STRONG SIN AZUCAR 235 G",0],
+["0982244","CHORIZO BESITO PICANTE",0],["0098723","CHORIZO PARRILLERO",0],["8000020000013","CINZANO BLANCO BOT. 950 ML",0],["8000020000020","CINZANO VERMOUTH ROSSO 1LT",0],
+["00050","COCA COLA 350 VIDRIO RETORNABLE",0],["7840058009449","COCA COLA DESCARTABLE 1L",12],["7840058008084","COCA COLA ORIGINAL 2L DESCARTABLE",7],["7840058008565","COCA COLA ORIGINAL 3L DESCARTABLE",4],["7840058000019","COCA COLA ORIGINAL 500 ML DESC",18],["7840058000675","COCA COLA ORIGINAL DESCARTABLE 1.5L",6],["7840058001887","COCA COLA ORIGINAL DESCARTABLE 250ML",24],["7790895002748","COCA COLA ORIGINAL LATA 310ML",0],["7790895000232","COCA COLA ORIGINAL LATA 354ML",5],["7840058000477","COCA COLA ORIGINAL RETORNABLE 2L",12],["12","COCA COLA ORIGINAL RETORNABLE VIDRIO 1.5L",16],["7840058000316","COCA COLA ORIGINAL RETORNABLE VIDRIO 1L",24],
+["7840058002549","COCA COLA SIN AZUCAR DESCARTABLE 1.5L",1],["7840058009586","COCA COLA SIN AZUCAR DESCARTABLE 1L",-1],["7840058004086","COCA COLA SIN AZUCAR DESCARTABLE 2L",3],["7840058002532","COCA COLA SIN AZUCAR DESCARTABLE 500ML",10],["7790895067587","COCA COLA SIN AZUCAR LATA 354 ML",1],["7840058003638","COCA COLA SIN AZUCAR RETORNABLE PLASTICO 2L",0],
+["7898295300935","CONTI ZERO GRAU LATA 269 ML",0],["7898295300942","CONTI ZERO GRAU LATA 473 ML",49],["080660956411","CORONA BOT. 710ML",-6],["7891991305679","CORONA CERO ALCOHOL 330ML",2],["7891149108749","CORONA EXTRA 210ML",0],["7891991295055","CORONA EXTRA LATA 350 ML",8],
+["7840058002952","CRUSH GUARANA DESCARTABLE 2 L",0],["7840058003010","CRUSH NARANJA DESCARTABLE 2 L",0],["7840058005938","CRUSH PIÑA DESCARTABLE 2",0],["7840058002938","CRUSH PIÑA DESCARTABLE 2 L",0],["7840058002945","CRUSH POMELO DESCARTABLE 2 L",0],["7840058006905","CRUSH POMELO DESCARTABLE 2L",0],
+["7840235002256","DE LA COSTA COLA DESCARTABLE 330 ML",0],["7840235002355","DE LA COSTA GUARANA DESCARTABLE 2 L",0],["7840235002232","DE LA COSTA GUARANA DESCARTABLE 330 ML",0],["7840058010209","DEL VALLE FRESH POMELO BOT 1.5L",0],["300","Delivery",59],
+["7790950144550","DR LEMON BLACK CHERRY LATA 473 ML",0],["7790950144758","DR LEMON GIN TONIC 473 ML",0],["7790950140859","DR LEMON POMELO 473ML",0],["7790950148107","DR LEMON SPICY + GINGER ALE",0],["7790950144055","DR. LEMON MOJITO BOT. 473 ML",0],
+["121002292238","ENCENDEDOR HIPER",87],["7804612131809","ENCENDEDOR RONSON",0],["9005465288056","ENERGIZANTE DARK DOG GUARANA LATA 250 ML",7],["7841431000343","ENERGIZANTE DARK DOG GUARANA LATA 500 ML",2],["070847033233","ENERGIZANTE MONSTER ENERGY ORIGINAL GREEN LATA 473ML",-1],["070847037033","ENERGIZANTE MONSTER ENERGY ULTRA S/AZUCAR LATA 473 ML",3],["9002490100070","ENERGIZANTE RED BULL ENERGY DRINK LATA 250 ML",2],
+["7840058010247","FANTA GUARANA 1L DESCARTABLES",0],["7840058008503","FANTA GUARANA 250 ML X1",0],["7840058004673","FANTA GUARANA DESCARTABLE 2L",1],["7840058005489","FANTA GUARANA DESCARTABLE 3 L",0],["7840058003089","FANTA GUARANA DESCARTABLE 500 ML",3],["7840058003133","FANTA GUARANA RETORNABLE PLASTICO 2L",3],["7840058003737","FANTA GUARANA RETORNABLE VIDRIO 1.5L",0],["7840058003720","FANTA GUARANA RETORNABLE VIDRIO 1L",1],
+["7840058010377","FANTA NARANJA 1L DESCARTABLE",0],["7840058010346","FANTA NARANJA 250 ML",0],["7840058010353","FANTA NARANJA 500ML",3],["7840058010391","FANTA NARANJA DESCARTABLE 2L",0],["7840058005472","FANTA NARANJA DESCARTABLE 3L",0],["7840058010438","FANTA NARANJA RET 2L",0],["7840058010445","FANTA NARANJA RETORNABLE VIDRIO 1.5L",1],["7840058000330","FANTA NARANJA RETORNABLE VIDRIO 1L",0],
+["7840058004697","FANTA PIÑA DESCARTABLE 2L",0],["7840058003690","FANTA PIÑA DESCARTABLE 500ML",5],["7840058003751","FANTA PIÑA RET VIDRIO 1.5L",1],["7840058003669","FANTA PIÑA RETORNABLE PLASTICO 2L",3],["78400580003751","FANTA PIÑA RETORNABLE VIDRIO 1.5L",0],["7840058003744","FANTA PIÑA RETORNABLE VIDRIO 1L",0],
+["7840138001509","FORTIN ARANDANO BOTELLA 750 ML",17],["7840138001264","FORTIN FRUTOS ROJOS BOTELLA 475 ML",4],
+["7840058009012","FRUGOS DELVALLE DURAZNO TETRA 1.5L",-2],["7840058008978","FRUGOS DELVALLE DURAZNO TETRA 1L",6],["7840058008992","FRUGOS DELVALLE DURAZNO TETRA 200ML",16],["7840058009036","FRUGOS DELVALLE MANZANA TETRA 1L",0],["7840058008312","FRUGOS DELVALLE NARANJA DESCARTABLE 1.5L",4],["7840058008336","FRUGOS DELVALLE NARANJA DESCARTABLE 250 ML",0],["7840058008299","FRUGOS DELVALLE NARANJA DESCARTABLE 250ML",0],["7840058009098","FRUGOS DELVALLE NARANJA TETRA 1 LT",0],["7840058009074","FRUGOS DELVALLE NARANJA TETRA 1.5 LT",-1],["7840058003584","FRUGOS DELVALLE NARANJA TETRA 200ML",0],
+["7790950000160","GANCIA BOT. 950 ML",0],["7840058010155","GASEOSA FANTA GUARANA DESCARTABLE 1L",0],["7790950145274","GIN DR LEMON TROPICAL GIN BOT. 473 ML",0],["5000291020706","GIN TANQUERAY LONDON DRY BOT. 750 ML",0],
+["7802100003287","HEINEKEN 0 LATA 350 ML I",0],["7802100005441","HEINEKEN BOT. 250ML",1],["7802100004185","HEINEKEN BOTELLA 650ML",12],["87120103","HEINEKEN LATA 250 ML",0],["7802100005373","HEINEKEN LATA 269 ML",7],["7802100000316","HEINEKEN LATA 350 ML",0],["7802100004789","HEINEKEN SILVER BOTELLA 650 ML",0],["7802100004796","HEINEKEN SILVER LATA 269 ML",0],
+["1704","HIELO 1/5",-271],["00035","HIELO 1KG",-35],["0123","HIELO 3KG",-35],["0001","HIELO CHICO",-428],["00020","HIELO SAVORIZADO",-3],
+["7840894000952","ISAAC COLA DESCARTABLE 330 ML",0],["7840894001010","ISAAC NARANJA DESCARTABLE 330 ML",0],["7840894001133","ISAAC UVA PET 330 ML",0],["082184090442","JACK DANIEL´S TENESSE",1],["82184007037","JACK DANIELS 1LT",0],["7840058009814","JUGO KAPO DEL VALLE NARANJA 200 ML",0],["7840058008930","JUGOS FRUGOS DELVALLE DURAZNO LIGTH TETRA 1 L",0],["7840235002898","KAMPITO CITRUS DESCARTABLE 2L",0],
+["78409620","KENT BLUE 8 BOX 10 S",3],["78409637","KENT BLUE 8 BOX 20 S",6],["78422896","KENT NEO IKON BOX 20 S",1],["78422889","KENT NEO ROSE BOX 20 S",1],["78422971","KENT NEO SPLASH 20",0],["78422902","KENT NEO TROPIC BOX 20 S",4],["78409651","KENT SILVER 4 BOX 20 S",1],["78410138","KENT SWITCH BOX 11 S",5],["78409989","KENT SWITCH BOX 20 S",6],
+["78422841","KENTUCKY BLUE 20 CAJA BLANDA",0],["78422858","KENTUCKY ROJO 20 CAJA DURA",10],["78422865","KENTUCKY ROJO BOX 10",11],["78422872","KENTUKY ROJO CAJA BLANDA",15],
+["7790290000523","LICOR BRANCA FERNET BOT. 1 L",0],["7790290101602","LICOR BRANCA FERNET BOT. 750 ML",4],["7792410523165","LICOR BUHERO NEGRO BOT. 700 ML",0],["4067700014559","LICOR JAGERMEISTER BOT 700ML",2],
+["78422759","LUCKY COMPAC VERDE",0],["78422117","LUCKY STRIKE AZUL 10 S",7],["78421974","LUCKY STRIKE AZUL BOX 20S",-3],["78422094","LUCKY STRIKE CHILL 20 S",0],["78422100","LUCKY STRIKE CLICK PURPLE 20 S",0],["7840609016568","LUCKY STRIKE COMPACT 20 S.",0],["78422018","LUCKY STRIKE CRUSH BOX 20S",0],["78422001","LUCKY STRIKE CRUSH BOX. 10S",0],["78412705","LUCKY STRIKE INDIGO BOX 20 S",0],["78419803","LUCKY STRIKE RED BOX 20S",0],["78421981","LUCKY STRIKE WILD BOX 10S",0],["78421998","LUCKY STRIKE WILD BOX 20S",5],
+["78406827","MARLBORO ADVANCE 20 S",0],["78420854","MARLBORO ARTESANAL TABACO REPOSADO 10 S",0],["78420847","MARLBORO ARTESANAL TABACO REPOSADO 20 S",0],["7841044014294","MARLBORO FOREX MIX + VASO DE REGALO",0],["78421776","MARLBORO FUSION SUNSET 20 S",0],["7841044014409","MARLBORO ICE BREEZE",0],["78406810","MARLBORO ROJO 20 S",-6],["78406834","MARLBORO ROJO SOFT 10 S",0],["78419599","MARLBORO SUNSET BOX 20 S",0],["78421783","MARLBORO VISTA FOREST BOX 20 S",0],
+["7891991299619","MICHELOB BOT. 330 ML",0],["7840050009737","MICHELOB BOTELLITA 275ML",0],["7840050009515","MICHELOB LATA 350 ML",55],["7840050009508","MICHELOB ULTRA 269",46],["7840050010146","MICHELOB ULTRA RET 710ML",2],["7898605252985","MIKES HARD LEMONADE LATA 269 ML",53],["1789860525298","MIKES HARD LEMONADE LATA 269ML",0],
+["3456217","MILLER GENUINE DRAFT BOT. 355ML",6],["7898032910168","MILLER GENUINE DRAFT BOT. 600 ML",11],["7898032910144","MILLER GENUINE DRAFT BOTELLA 355 ML",-2],["7898032910106","MILLER GENUINE DRAFT LATA 269 ML",0],["7898032910083","MILLER GENUINE DRAFT LATA 350 ML",0],["34100009908","MILLER HIGH LIFE 296 ML",6],["7898032910274","MILLER HIGH LIFE BOT. 355ML",6],["034100009908","MILLER HIGH LIFE LATA 296 ML",0],["7898032910472","Miller Ultra bot 275",24],
+["7840028202153","MIRINDA GUARANA DESCARTABLE 2.5 L",0],["7840028203990","MIRINDA GUARANA DESCARTABLE 3 L",0],["7840028202122","MIRINDA GUARANA DESCARTABLE 500 ML",0],["70847033301","MONSTER MANGO LOCO SUCO 473 ML",0],
+["7840025110864","MUNICH ORIGINAL BOT. 970 ML",6],["7840025110994","MUNICH ORIGINAL LATA 269 ML",10],["7840025110710","MUNICH ROYAL BOT. 330ML",0],["7840025110796","MUNICH ROYAL LATA 269 ML",0],["7840025000028","MUNICH ULTRA BOTELLA 275 ML",1],["7840025000011","MUNICH ULTRA LATA 269 ML",36],["7453038473064","NAIPES UNID",-2],
+["7840235000689","NIKO COLA DESCARTABLE 1 L",0],["7840235000603","NIKO COLA DESCARTABLE 2 L",0],["7840235000719","NIKO GUARANA DESCARTABLE 1 L",0],["7840235000634","NIKO GUARANA DESCARTABLE 2 L",0],["7840235000764","NIKO PIÑA DESCARTABLE 2L",0],["","NIKO POMELO 1L",0],["7840235000610","NIKO POMELO 2L",0],
+["7840050002639","OURO FINO LATA 269ML",154],["78404533","OURO FINO LATA 354 ML",32],["7840050003230","OURO FINO RET VIDRIO 340 ML",264],["78409736","OURO FINO RET VIDRIO 940 ML",24],
+["78403215","PALERMO BLUE BOX 10 S",1],["78403192","PALERMO BLUE BOX 20 S",0],["78411098","PALERMO DUO BOX 10 S",16],["78411081","PALERMO DUO BOX 20 S",12],["78408562","PALERMO GREEN BOX 10 S",0],["78407466","PALERMO GREEN BOX 20 S II",-1],["78402041","PALERMO RED BOX 10 S",0],["78402034","PALERMO RED BOX 20 S",7],["78409743","PALERMO TRES BOX 20 S II",-1],["78421615","PALERMO TRICK BOX 10 S",3],["78421509","PALERMO TRICK BOX 20 S II",1],
+["7896004008998","PAPAS FRITAS PRINGLES CHEDDAR Y BACON 105 G",0],["7896004009612","PAPAS FRITAS PRINGLES ORIGINAL 37G",0],["30058569","PAPEL DE CIGARRILLO OCB LARGO 50 UN",0],["30087859","PAPEL DE CIGARRILLO OCB ORGANIC 50 UN",-4],
+["7840028206502","paso de los toros pomelo 1l",1],["7840028202498","PASO DE LOS TOROS POMELO 2.5L",-1],["7840028202443","PASO DE LOS TOROS POMELO DESCARTABLE 2 L",2],["7840028205581","PASO DE LOS TOROS POMELO DESCARTABLE 250 ML",7],["7840028202436","PASO DE LOS TOROS POMELO DESCARTABLE 500 ML",3],["7841106000821","PASTILLAS YERON 4UN",-10],
+["7792798002351","PATAGONIA AMBER LAGER BOT. 730 ML",2],["7840050005760","PATAGONIA LAGER BOT. 730 ML",0],["7792798015023","PATAGONIA LAGER DEL SUR BOT 730",0],
+["7840028202108","PEPSI COLA 2.5 LT",0],["7840028202092","PEPSI COLA DESCARTABLE 2 L",0],["7840028205567","PEPSI COLA DESCARTABLE 250 ML",0],["7840028203983","PEPSI COLA DESCARTABLE 3 L",0],["7840050009805","PILSEN ALBIRROJA",0],["78409613","PILSEN RET VIDRIO 940 ML",44],["7848000563353","PODS SHEEP WATERMELON STRAWBERRY 10000K",0],
+["7840025110857","POLAR ICE LATA 269 ML",81],["7840025011024","POLAR LATA 350 ML",2],["7840058002877","POWERADE MOUNTAIN BLAST DESCARTABLE 500 ML",0],["7840058008824","POWERADE MOUNTAIN BLAST DESCARTABLE 990 ML",0],
+["7840779002972","PULP NARANJA DESCARTABLE 1 L",0],["7840779001050","PULP NARANJA DESCARTABLE 2 L",0],["78412002","PULP NARANJA DESCARTABLE 250 ML",0],["7840779006703","PULP NARANJA DESCARTABLE 3 L",0],["7840779009193","PULP NARANJA DESCARTABLE 500 ML",0],["7840779009209","PULP POMELO DESCARTABLE 500 ML",0],
+["7840138000199","RON FORTIN BLANCO BOT. 750 ML",2],["7840138001059","RON FORTIN CANELA BOT. 750 ML",2],["7840138001189","RON FORTIN COCO BOT. 475 ML",4],["7840138000281","RON FORTIN COCO BOT. 750 ML",9],["7840138001257","RON FORTIN FRUTOS ROJOS BOT. 750 ML",4],["7840138000144","RON FORTIN LIMON BOT. 750 ML",0],["78412262","SAN MARINO SOFT 20 S",0],
+["7840058001061","SCHWEPPES CITRUS DESCARTABLE 2 L",9],["7840058001436","SCHWEPPES CITRUS DESCARTABLE 500 ML",6],["7840058011152","SCHWEPPES POMELO ZA 250 ML",2],["7840058010773","SCHWEPPES POMELO ZA 2L",3],["7840058010766","SCHWEPPES POMELO ZA 500ML",5],["7801610333167","SCHWEPPES TONICA 310 LATA",9],
+["7792716000155","SIDRA LA FARRUCA BOT. 910 ML",0],["7791305600035","SIDRA PREFERIDA MANZANA BOT. 910 ML",-2],["7840050008884","SKOL BOT. 275 ML",-1],["7891149103102","SKOL LATA 269 ML",36],["7840050006644","SKOL RET VIDRIO 940 ML",28],["7893218003603","SMIRNOFF ICE ORIGINAL BOT. 275 ML",10],["7893218003610","SMIRNOFF ICE ORIGINAL LATA 269 ML",29],
+["7840058010230","SPRITE 1L DESCARTABLE",0],["7840058000484","SPRITE LIMON BOT RET 2 L",0],["7840058000378","SPRITE LIMON BOT. 1.5 L",0],["7840058000323","SPRITE LIMON BOT. RETORNABLE 1 L",0],["7840058006622","SPRITE LIMON DESCARTABLE 3 L",0],["7840058000088","SPRITE LIMON ORIGINAL DESCARTABLE 2 L",0],["7840058000071","SPRITE LIMON PET 500ML",4],["7840058006615","SPRITE LIMON SIN AZUCAR DESCARTABLE 2 L",0],["7840058010162","SPRITE ORIGINAL 250 ML X1",0],
+["7891991015462","STELLA ARTOIS BOT. 330 ML",7],["7891991295109","STELLA ARTOIS BOT. 600 ML.",0],["7891991016223","STELLA ARTOIS LATA 350 ML",0],["7840894000334","TAMBURI COLA DESCARTABLE 330 ML",0],["7840894000358","TAMBURI GUARANA DESCARTABLE 330 ML",-2],["7840894000372","TAMBURI NARANJA DESCARTABLE 330 ML",-1],["00015","VASITO PLASTICO 400ML",-630],
+["7790717153474","VINO BLANCO CAPRICCIO 750 ML",0],["7804300120276","VINO BLANCO SANTA HELENA BOT. 750 ML",0],["7804300157029","VINO BLANCO SANTA HELENA DULCE BOT 750 ML",0],["","Vino Cria de cosechas",5],["7790703204968","VINO DON VALENTIN LACADO 750ML",2],["7804300149307","VINO DULCE TINTO DULCE SANTA HELENA BOT. 750 ML",0],["7896037913849","VINO DULCE TINTO QUINTA DO MORGADO BOT. 1 L",0],["7528309352666","VINO DULCE TINTO SANTA CLAUDIA BOT. 750 ML",1],["7804300149314","VINO DULCE TINTO SANTA HELENA BOT. 1.5 L",-2],["7840185786831","VINO DULCE TINTO SANTA HELENA BOT. 750 ML",0],
+["7791250001529","VINO ESPUMANTE NAVARRO CORREAS EXTRA BRUT BOT 750ML",0],["7790036047324","VINO ROSADO UVITA TETRA 1 L",0],["7896780902466","VINO TINTO CANCAO BOT. 1 L",1],["7896780900196","VINO TINTO CANCAO BOT. 750 ML",0],["7804320510187","VINO TINTO CASILLERO DEL DIABLO RESERVA MALBEC BOT. 750 ML",0],["7898901005186","VINO TINTO CRISTALLE BOT. 750 ML",0],["7790314056598","VINO TINTO ESTANCIA MENDOZA CABERNET/MALBEC BLEND BOT. 750 ML",0],["7791203003327","VINO TINTO LA LINDA CABERNET SAUVIGNON BOT 1750 ML",0],["7791203001231","VINO TINTO LUIGI BOSCA MALBEC BOT. 750 ML",0],["7528300666878","VINO TINTO SANTA CLAUDIA BOT. 1 L",0],["7528300647822","VINO TINTO SANTA CLAUDIA BOT. 1.5 L",1],["7804300120566","VINO TINTO SANTA HELENA BOT. 1.5 L",1],["7804300120467","VINO TINTO SANTA HELENA BOT. 750ML",1],["7790036046327","VINO TINTO UVITA TETRA 1 L",0],
+["7790950202823","VODKA DR. LEMON C/VODKA LATA 473 ML",0],["5010106111956","WHISKY BALLANTINES FINEST BOT 1L",2],["5000299629406","WHISKY BALLANTINES QUEEN BOTELLA 1LT",1],["7896037916338","WHISKY BLACK STONE BOT. 1 L",0],["080432400432","WHISKY CHIVAS REGAL 1 L",1],["5010327000039","WHISKY GRANTS BOT. 1 L",3],["5010327208107","WHISKY GRANTS BOT. 200 ML",2],["82184004364","WHISKY JACK DANIELS APPLE BOT. 1 L",0],["082184000328","WHISKY JACK DANIELS HONEY BOT. 1 L",0],
+["5000267125046","WHISKY JOHNNIE WALKER BLACK LABEL ART DECO BOT 1L",3],["5000267025209","WHISKY JOHNNIE WALKER BLACK LABEL BOT. 200 ML",0],["5000267024400","WHISKY JOHNNIE WALKER BLACK LABEL BOT. 500 ML",0],["5000267190143","WHISKY JOHNNIE WALKER RED LABEL BOT. 1",5],["5000267015200","WHISKY JOHNNIE WALKER RED LABEL BOT. 200ML",0],["5000267178479","WHISKY JOHNNIE WALKER SONG OF ICE BOT. 750 ML",0],
+["7840127020849","YERBA KURUPI MEGA MENTA 250 G",0],["7840127000216","YERBA KURUPI MENTA/BOLDO CAJA250G",0],["7840127000124","YERBA KURUPI MENTA/BOLDO CAJA500G",0],["7840127020887","YERBA KURUPI MENTA/BOLDO CLASICA 100G",0],["7840127001831","YERBA KURUPI MENTA/LIMON CAJA250G",0]
+];
+// Unidades vendidas últimos 90 días (por código)
+const VENTAS={"7840050003230":6726,"7840050002639":2181,"7840050008655":1865,"7840025000011":1358,"78409736":856,"78400030":839,"7840050009508":767,"78409613":731,"7840050003605":664,"7840025110857":621,"7840050004992":549,"7891149103102":537,"7840050007696":436,"00015":378,"7898295301437":372,"7840050009515":303,"7840058000316":296,"7898295300942":295,"0001":288,"7840058001887":273,"7840050008372":268,"7840050006644":243,"7840058000477":240,"12":229,"78404533":228,"78410848":211,"7840058000019":204,"78411098":198,"1704":189,"7840027130006":174,"78422865":171,"7891149108749":152,"78422872":140,"7840025110994":126,"7840027210005":115,"7840058009449":112,"7840025110864":103,"00036":100,"78411081":96,"78406810":83,"7898032910168":83,"7840025000028":70,"7840025011024":70,"78422858":68,"121002292238":67,"78400528":66,"78421974":51,"7840058000675":47,"7840058002532":46,"7802100004185":43,"7840058008084":40,"78422117":39,"080660956411":38,"00035":33,"7790036046327":33,"7840050010146":28,"7840050008884":25,"78938816":24,"0123":24,"78419339":24,"78421981":23,"78407466":21,"7840027040008":21,"7840058008565":20,"78421615":18,"7840058008381":18,"78403215":18,"7840058008404":18,"7802100005373":17,"7790895000232":17,"7891991295055":16,"7891991015462":16,"78413658":16,"7840058000071":16,"7898032910083":15,"7840027340009":15,"78410138":14,"7840058010353":14,"78403192":14,"78400498":13,"7802100005441":13,"78421998":12,"78409620":12,"7840050002493":12,"7840027320001":12,"7840050003803":12,"7840058003010":12,"7840138001257":11,"78024465":11,"7840028202443":11,"78409989":11,"78409637":11,"7840138000021":11,"7840981000094":11,"78422896":10,"7840058011152":10,"7893218003603":10,"7840058003089":9,"78420854":9,"78420847":9,"78421509":9,"7840058001443":8,"7840058010766":7,"7898605252985":7,"78422902":7,"77969088":6,"7840028206502":6,"7841106000821":6,"7891991305679":6,"7898032910267":6,"7840050003704":6,"7840058002105":6,"7840028202436":6,"78402034":5,"78409743":5,"7898032910106":5,"7790895067587":5,"7840058003737":4,"7840058003416":4,"7840058003720":4,"7840058000088":4,"7893218003610":4,"7840058002945":4,"7840058000484":4,"7840058004215":4,"7840058000330":4,"78408562":4,"78422889":4,"7840779009209":4,"7840058004086":4,"7804300120566":4,"7840058000378":4,"7840058010438":4,"7804300120467":4,"7840058010391":4,"7840235000610":4,"7528309352666":4,"00020":3,"7840058004673":3,"300":3,"7840058003812":3,"7840058001061":3,"7840058010445":3,"7840058000323":3,"5000267190143":3,"7840138001509":3,"7802100003287":3,"78938823":3,"7840058003690":3,"7528300666878":3,"7840058002549":3,"7840058003751":3,"7790290101602":3,"7801610333167":3,"7791305600035":2,"7840058002952":2,"7840894000358":2,"78402041":2,"78401037":2,"7898032910144":2,"7896780902466":2,"78422759":2,"7528300647822":2,"30087859":2,"7840028205581":2,"7840058005229":2,"7453038473064":2,"7840058006905":2,"78938793":2,"7840058010117":1,"7840894000372":1,"7840138001264":1,"77969071":1,"7840058007582":1,"7840609016568":1,"7840058003669":1,"7840138000038":1,"7841431000343":1,"7840138000281":1,"7841044014409":1,"7840138000137":1,"7840050005760":1,"7840138001189":1,"78422100":1,"070847037033":1,"Vino Cria de cosechas":1,"5010327208107":1,"7840058003133":1,"7840058003874":1,"7898295300935":1,"9002490100070":1,"070847033233":1,"7804300149314":1,"7840028202498":1,"7840058009586":1,"78412408":1,"7896780900196":1};
+// Orden: líneas más vendidas primero; dentro de la línea de producto juntos, de menor a mayor tamaño; a igual tamaño, retornable primero
+const SZ=/(\d+(?:\.\d+)?)\s*(ML|LTS?|L|KG|G)\b|(\d+)\s*S\b/;
+function tam(n){n=n.toUpperCase().replace(',','.');let m=n.match(SZ);
+  if(m){if(m[3])return +m[3];let v=+m[1];return /^(L|LT|LTS|KG)$/.test(m[2])?v*1000:v}
+  if(/LITRO/.test(n))return 1000;
+  m=n.match(/(\d+(?:\.\d+)?)(?!.*\d)/);if(m){const v=+m[1];return v<10?v*1000:v}return 0}
+function linea(n){return n.toUpperCase().replace(/^(CERVEZA|GASEOSA|ENERGIZANTE|LICOR|JUGOS?)\s+/,'')
+  .replace(new RegExp(SZ.source,'g'),' ').replace(/\b(LATA|BOT|BOTELLA|BOTELLITA|RET|RETORNABLE|VIDRIO|PLASTICO|DESCARTABLES?|DESC|PET|TETRA|ORIGINAL|BOX|X1|II|I|LITRO)\b/g,' ')
+  .replace(/\b\d+(\.\d+)?\s*$/,'').replace(/[^A-ZÑ0-9 ]/g,' ').replace(/\s+/g,' ').trim()}
+function ordenar(a){const o=a.map(i=>({i,l:linea(i.n),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:VENTAS[i.c||i.n]||0}));
+  const tl={};o.forEach(x=>tl[x.l]=(tl[x.l]||0)+x.v);
+  return o.sort((x,y)=>tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
+let st={fecha:new Date().toISOString().slice(0,10),resp:'',items:ordenar(sample.map(([c,n,s])=>({c,n,s,k:null}))),f:'todos'};
+try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
+const $=id=>document.getElementById(id);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const fmt=n=>(n>0?'+':'')+n;
+function render(){
+  $('fecha').value=st.fecha;$('resp').value=st.resp;
+  const q=$('q').value.trim().toLowerCase();
+  let tot=st.items.length,cont=st.items.filter(i=>i.k!=null).length;
+  $('sTot').textContent=tot;$('sCont').textContent=cont;$('sDif').textContent=tot-cont;
+  document.querySelectorAll('#filt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===st.f));
+  const rows=st.items.map((i,ix)=>({i,ix})).filter(({i})=>{
+    if(st.f==='pend'&&i.k!=null)return false;
+    return !q||i.n.toLowerCase().includes(q)||String(i.c).includes(q);
+  });
+  const L=$('list');
+  L.innerHTML='<div class="row head"><span>Producto</span><span class="num">Cantidad</span><span></span></div>';
+  if(!rows.length){L.insertAdjacentHTML('beforeend','<div class="empty">Sin productos en este filtro.</div>');return}
+  rows.forEach(({i,ix})=>{
+    const r=document.createElement('div');r.className='row'+(i.k!=null?' done':'');
+    r.innerHTML=`<div class="name"><div></div><small></small></div>      <input class="cnt" id="c${ix}" type="number" inputmode="decimal" value="${i.k??''}" aria-label="Conteo">
+      <button class="del" aria-label="Quitar" title="Quitar">×</button>`;
+    r.querySelector('.name div').textContent=i.n;r.querySelector('small').textContent=i.c||'';
+    const inp=r.querySelector('input');
+    inp.addEventListener('change',()=>{i.k=inp.value===''?null:Number(inp.value);save();render();
+      const nx=document.querySelectorAll('.row input.cnt')[[...document.querySelectorAll('.row input.cnt')].findIndex(x=>x.id==='c'+ix)+1];if(nx)nx.focus()});
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}});
+    r.querySelector('.del').onclick=()=>{st.items.splice(ix,1);save();render()};
+    L.appendChild(r);
+  });
+}
+$('fecha').onchange=e=>{st.fecha=e.target.value;save()};
+$('resp').oninput=e=>{st.resp=e.target.value;save()};
+$('q').oninput=render;
+$('filt').onclick=e=>{const b=e.target.closest('button');if(b){st.f=b.dataset.f;save();render()}};
+$('add').onsubmit=e=>{
+  e.preventDefault();const v=$('aName').value.trim();const n=Number($('aQty').value||1);if(!v)return;
+  let it=st.items.find(i=>String(i.c)===v||i.n.toLowerCase()===v.toLowerCase());
+  if(!it){it={c:/^\d+$/.test(v)?v:'',n:/^\d+$/.test(v)?'Código '+v:v,s:0,k:0};st.items.push(it)}
+  it.k=(it.k||0)+n;$('aName').value='';$('aQty').value='';$('aName').focus();save();render();
+};
+function show(note,txt,apply){$('outBox').hidden=false;$('outNote').textContent=note;$('out').value=txt;$('bApply').hidden=!apply;$('out').focus();$('out').select()}
+$('bCsv').onclick=()=>show('CSV listo para Excel.',['codigo;producto;cantidad',...st.items.map(i=>[i.c,i.n,i.k??''].join(';'))].join('\n'));
+const resumen=()=>{const c=st.items.filter(i=>i.k!=null);
+  return `Conteo ${st.fecha}${st.resp?' · '+st.resp:''}\nContados: ${c.length}/${st.items.length}\n`+c.map(i=>`• ${i.n}: ${i.k}`).join('\n')};
+$('bWa').addEventListener('click',()=>{$('bWa').href='https://wa.me/?text='+encodeURIComponent(resumen())});
+$('bResumen').onclick=()=>{
+  show('Resumen para enviar.',resumen());
+};
+$('bPaste').onclick=()=>show('Pegá una línea por producto: codigo;producto. Reemplaza la lista actual.','',true);
+$('bApply').onclick=()=>{
+  const it=$('out').value.split('\n').map(l=>l.split(/[;\t]/).map(x=>x.trim())).filter(a=>a.length>=2&&a[1])
+    .map(a=>({c:a[0],n:a[1],s:Number((a[2]||'0').replace(',','.'))||0,k:null}));
+  if(it.length){st.items=ordenar(it);save();render();$('outBox').hidden=true}
+};
+$('bCopy').onclick=()=>{navigator.clipboard.writeText($('out').value).then(()=>$('bCopy').textContent='Copiado').catch(()=>$('out').select());setTimeout(()=>$('bCopy').textContent='Copiar',1500)};
+$('bClose').onclick=()=>$('outBox').hidden=true;
+$('bReset').onclick=()=>$('resetBox').hidden=false;
+$('rNo').onclick=()=>$('resetBox').hidden=true;
+$('rYes').onclick=()=>{st.items.forEach(i=>i.k=null);st.fecha=new Date().toISOString().slice(0,10);$('resetBox').hidden=true;save();render()};
+render();
+// Historial y aplicar al inventario
+const rpc=async(fn,body)=>{const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY_SB,Authorization:'Bearer '+KEY_SB,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>null);if(!r.ok){const m=(j&&j.message)||'';throw new Error(/pin_incorrecto/.test(m)?'PIN incorrecto.':/bloqueado/.test(m)?'Demasiados intentos. Esperá 15 minutos.':'No se pudo conectar. Probá de nuevo.')}return j};
+const gs=n=>Math.round(n).toLocaleString('es-PY');
+let PIN='';
+$('bHist').onclick=()=>{$('hist').hidden=!$('hist').hidden;if(!$('hist').hidden)$('pin').focus()};
+async function cargarHist(){
+  const m=$('hMsg');m.textContent='Cargando…';
+  try{const d=await rpc('conteos_listar2',{p_pin:PIN,p_desde:$('hDesde').value||null});
+    m.textContent=d.length?'':'No hay conteos en ese rango.';
+    const L=$('hList');L.innerHTML='';
+    d.forEach(e=>{
+      const conDif=e.items.filter(i=>i.pid&&Math.round(i.k)!==i.s).length, sinProd=e.items.filter(i=>!i.pid).length;
+      const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr';r.style.gap='6px';
+      r.innerHTML='<div class="name"><div></div><small></small></div><div class="tools"></div><div class="confirm" hidden></div>';
+      r.querySelector('.name div').textContent=e.fecha.split('-').reverse().join('/')+' · '+e.responsable;
+      r.querySelector('small').textContent=new Date(e.created_at).toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'})+' · '+e.contados+' contados · '+conDif+' con diferencia'+(sinProd?' · '+sinProd+' sin vincular':'')+' · '+(e.aplicado_at?'APLICADO':'pendiente');
+      const T=r.querySelector('.tools'),C=r.querySelector('.confirm');
+      const bv=document.createElement('button');bv.className='btn ghost';bv.textContent='Ver diferencias';T.appendChild(bv);
+      bv.onclick=()=>show('Conteo de '+e.responsable+' · diferencias contra el stock del sistema al momento de contar.',
+        e.items.filter(i=>!i.pid||Math.round(i.k)!==i.s).map(i=>i.pid?`• ${i.n}: sistema ${i.s} / contado ${i.k} (${fmt(Math.round(i.k)-i.s)})`:`• ${i.n}: ${i.k} (no está en el sistema, se saltea)`).join('\n')||'Sin diferencias.');
+      const bc=document.createElement('button');bc.className='btn ghost';bc.textContent='CSV';T.appendChild(bc);
+      bc.onclick=()=>show('CSV.',['codigo;producto;sistema;contado;diferencia',...e.items.map(i=>[i.c,i.n,i.s??'',i.k,i.pid?Math.round(i.k)-i.s:''].join(';'))].join('\n'));
+      if(!e.aplicado_at){
+        const ba=document.createElement('button');ba.className='btn primary';ba.textContent='Aplicar al inventario';T.appendChild(ba);
+        ba.onclick=()=>{C.hidden=false;C.innerHTML='';C.append(`Se van a ajustar ${conDif} productos en la bodega. `);
+          const y=document.createElement('button');y.className='btn primary';y.textContent='Sí, aplicar';
+          const n=document.createElement('button');n.className='btn ghost';n.textContent='Cancelar';C.append(y,n);
+          n.onclick=()=>C.hidden=true;
+          y.onclick=async()=>{y.disabled=true;y.textContent='Aplicando…';
+            try{const x=await rpc('conteos_aplicar',{p_pin:PIN,p_id:e.id});
+              if(!x.ok)throw new Error(x.error==='ya_aplicado'?'Este conteo ya fue aplicado.':'No se pudo aplicar.');
+              m.textContent=`Aplicado ✓ ${x.aplicados} productos · dif. ${fmt(x.diferencia)} u · Gs. ${gs(x.diferencia_monto)}`+(x.omitidos?` · ${x.omitidos} salteados`:'');
+              cargarHist();
+            }catch(err){C.textContent=err.message}};
+        };
+      }
+      L.appendChild(r);
+    });
+  }catch(err){m.textContent=err.message}
+}
+$('pinF').onsubmit=e=>{e.preventDefault();PIN=$('pin').value.trim();if(PIN)cargarHist()};
+// Envío a Supabase (tabla bodega_conteos)
+const SB='https://sdpysvowvwucjfnyosuf.supabase.co',KEY_SB='sb_publishable_Px9Uz083rGIy3drTUvlDdw_otNlwCvs';
+$('bSend').onclick=async()=>{
+  const m=$('sendMsg'),c=st.items.filter(i=>i.k!=null);
+  if(!c.length){m.textContent='Cargá al menos un producto.';return}
+  if(!st.resp.trim()){m.textContent='Poné tu nombre en Responsable.';$('resp').focus();return}
+  $('bSend').disabled=true;m.textContent='Enviando…';
+  try{const r=await fetch(SB+'/rest/v1/bodega_conteos',{method:'POST',headers:{apikey:KEY_SB,Authorization:'Bearer '+KEY_SB,'Content-Type':'application/json',Prefer:'return=minimal'},
+      body:JSON.stringify({fecha:st.fecha,responsable:st.resp.trim().slice(0,80),contados:c.length,total:st.items.length,items:c.map(i=>({c:i.c||'',n:i.n,k:i.k}))})});
+    if(!r.ok)throw new Error(r.status);
+    m.textContent='Enviado ✓ '+new Date().toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'});
+  }catch(e){m.textContent='No se pudo enviar. Revisá internet y probá de nuevo (o usá WhatsApp).'}
+  $('bSend').disabled=false;
+};
+</script>
+
+</body></html>
