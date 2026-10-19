@@ -39,22 +39,29 @@ h1{font-family:var(--f-display);font-size:28px;margin:0;letter-spacing:.02em;tex
 .btn.ghost{border-radius:6px;background:transparent}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .list{display:grid;gap:6px}
-.row{display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.row{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
 .row.head{background:transparent;border:0;padding-block:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .name{min-width:0}
 .name div{font-weight:500;overflow-wrap:anywhere}
 .name small{color:var(--muted);font-family:var(--f-mono);font-size:11px}
 .num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right}
-.row input.cnt{width:100%;font:500 16px var(--f-mono);text-align:right;padding:7px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.row input.cnt{width:100%;font:600 20px var(--f-mono);text-align:right;padding:9px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
 .row.done input.cnt{border-color:var(--accent)}
 .dif.pos{color:var(--warn)} .dif.neg{color:var(--bad)} .dif.zero{color:var(--ok)}
-.del{border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer;border-radius:4px}
+.packs{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}.packs:empty{display:none}
+.pk{font:500 12px var(--f-mono);padding:4px 8px;border:1px solid var(--line);border-radius:6px;background:var(--chip);color:var(--fg);cursor:pointer}
+.row.rec{border-color:var(--warn);box-shadow:inset 4px 0 0 var(--warn)}
+.row.hit{outline:3px solid var(--accent)}
+.ed{display:flex;gap:4px;align-items:center}.ed select{font:inherit;font-size:12px;max-width:110px;padding:4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+.panel{display:grid;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px}
+.warnbox{white-space:pre-wrap;font-size:13px}
+#scanBox{position:fixed;inset:0;z-index:20;background:#000;display:grid;place-items:center}#scanBox video{width:100%;max-height:80vh;object-fit:cover}#scanBox .tools{position:absolute;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:16px;right:16px;justify-content:space-between;align-items:center;color:#fff}
 .cat{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px;padding:4px 2px;border-bottom:2px solid var(--fg);font-family:var(--f-display);font-size:18px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
 .cat small{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--muted)}
 .empty{color:var(--muted);text-align:center;padding:24px}
 .bar{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);
   padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.bar form{max-width:820px;margin:0 auto;display:grid;grid-template-columns:1fr 80px auto;gap:8px}
+.bar form{max-width:820px;margin:0 auto;display:grid;grid-template-columns:1fr 70px auto auto;gap:8px}
 .bar input{font:inherit;padding:10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);min-width:0}
 .tools{display:flex;gap:8px;flex-wrap:wrap}
 .note{font-size:12px;color:var(--muted)}
@@ -62,7 +69,7 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
 @media (max-width:520px){
   .stats{grid-template-columns:repeat(2,1fr)}
-  .row{grid-template-columns:1fr 90px}
+  .row{grid-template-columns:1fr 100px}
   .row .sis{display:none}
   .row.head .sis{display:none}
 }
@@ -83,23 +90,26 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
   <div class="filters" id="filt">
     <button data-f="todos" aria-pressed="true">Todos</button>
     <button data-f="pend" aria-pressed="false">Pendientes</button>
-    <select id="selCat" aria-label="Categoría" style="font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg)"><option value="">Todas las categorías</option></select>
+    <button data-f="rec" aria-pressed="false" id="fRec" hidden>A recontar</button>
+    <select id="selCat" aria-label="Grupo" style="font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg)"><option value="">Todas las categorías</option></select>
         <input id="q" placeholder="Buscar / código" aria-label="Buscar" style="flex:1;min-width:120px;font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--fg)">
   </div>
 </header>
 
+<div id="ordBox" class="panel" hidden><b>Ordenar recorrido</b><span class="note">Sectores en el orden en que se recorren (uno por línea). Después elegí el sector de cada producto y movelo con ↑ ↓.</span><textarea id="ordSec" rows="4" style="font:inherit;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)" placeholder="Heladera 1&#10;Heladera 2&#10;Depósito"></textarea><div class="tools"><button class="btn primary" id="ordSi">Guardar orden</button><button class="btn ghost" id="ordNo">Cancelar</button><span class="note" id="ordMsg"></span></div></div>
 <div class="list" id="list"></div>
 
 <div class="tools"><button class="btn primary" id="bSend">Enviar conteo</button><span class="note" id="sendMsg" aria-live="polite"></span></div>
+<div id="pendBox" class="panel" hidden><span id="pendTxt"></span><div class="tools"><button class="btn primary" id="pVer">Ver pendientes</button><button class="btn ghost" id="pCero">No hay, son 0</button><button class="btn ghost" id="pIgual">Enviar sin ellos</button></div></div>
 
 <div class="tools">
   <a class="btn ghost" id="bWa" href="https://wa.me/" target="_blank" rel="noopener" style="text-decoration:none">Enviar por WhatsApp</a>
   <button class="btn ghost" id="bCsv">Exportar CSV</button>
   <button class="btn ghost" id="bResumen">Resumen WhatsApp</button>
-  <button class="btn ghost" id="bPaste">Cargar lista</button>
   <button class="btn ghost" id="bReset">Nuevo conteo</button>
+  <button class="btn ghost" id="bRestore" hidden>Restaurar conteo anterior</button>
 </div>
-<div class="tools"><button class="btn ghost" id="bHist">Historial</button></div>
+<div class="tools"><button class="btn ghost" id="bHist">Historial</button><button class="btn ghost" id="bOrden" hidden>Ordenar recorrido</button></div>
 <section id="hist" hidden style="display:grid;gap:8px">
   <h2 style="font-family:var(--f-display);font-size:20px;margin:8px 0 0;text-transform:uppercase;letter-spacing:.02em">Historial de conteos</h2>
   <form id="pinF" class="meta">
@@ -108,22 +118,25 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
     <button class="btn primary" type="submit">Ver</button>
     <span class="note" id="hMsg" aria-live="polite"></span>
   </form>
+  <div class="tools"><button class="btn primary" id="hMulti" hidden>Aplicar marcados juntos</button></div><div class="confirm" id="hMultiC" hidden></div>
   <div class="list" id="hList"></div>
 </section>
-<div id="resetBox" class="confirm" hidden>¿Borrar todo el conteo? <button class="btn primary" id="rYes">Sí, borrar</button><button class="btn ghost" id="rNo">Cancelar</button></div>
+<div id="resetBox" class="panel" hidden><span>Para empezar un conteo nuevo escribí <b>BORRAR</b>. Se guarda una copia para restaurar.</span><span class="note" id="rWarn" style="color:var(--bad)"></span><div class="meta"><input id="rTxt" autocomplete="off" placeholder="BORRAR" style="width:140px"><button class="btn primary" id="rYes">Empezar nuevo</button><button class="btn ghost" id="rNo">Cancelar</button></div></div>
 <div id="outBox" hidden>
   <p class="note" id="outNote"></p>
   <textarea id="out"></textarea>
-  <div class="tools"><button class="btn primary" id="bCopy">Copiar</button><button class="btn ghost" id="bApply" hidden>Cargar</button><button class="btn ghost" id="bClose">Cerrar</button></div>
+  <div class="tools"><button class="btn primary" id="bCopy">Copiar</button><button class="btn ghost" id="bClose">Cerrar</button></div>
 </div>
-<p class="note">Productos del sistema, los más vendidos (90 días) primero. Se guarda en este navegador. "Cargar lista": pegar <code>codigo;producto</code> por línea (desde Excel o Supabase).</p>
+<p class="note">Lista actualizada desde el sistema al abrir. Todo se guarda en este celular aunque se cierre; si no hay internet, el envío queda pendiente y sale solo.</p>
 </div>
 
+<div id="scanBox" hidden><video id="scanVid" playsinline muted></video><div class="tools"><span id="scanMsg"></span><button class="btn primary" id="scanX" type="button">Cerrar</button></div></div>
 <div class="bar">
   <form id="add">
     <input id="aName" placeholder="Código o producto nuevo" aria-label="Producto" autocomplete="off">
-    <input id="aQty" type="number" inputmode="decimal" placeholder="Cant." aria-label="Cantidad">
+    <input id="aQty" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="Cant." aria-label="Cantidad">
     <button class="btn primary" type="submit">Sumar</button>
+    <button class="btn ghost" type="button" id="bScan" aria-label="Escanear">📷</button>
   </form>
 </div>
 
@@ -219,134 +232,255 @@ const CATS=[
 function cat(n){n=n.toUpperCase();for(const [c,re] of CATS)if(re.test(n))return c;return 'Otros'}
 const ALIAS={BRAHMITA:'BRAHMA',KENTUKY:'KENTUCKY',CHESTER:'CHESTERFIELD',DELVALLE:'FRUGOS'};
 function marca(l){const w=l.replace(/^\d+\s+/,'').split(' ')[0]||l;return ALIAS[w]||w}
-function ordenar(a){const o=a.map(i=>{const l=linea(i.n).replace(/\bCERO\b/g,'ZERO');return {i,l,g:cat(i.n),m:marca(l),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:VENTAS[i.c||i.n]||0}});
+function ordenar(a){const o=a.map(i=>{const l=linea(i.n).replace(/\bCERO\b/g,'ZERO');return {i,l,g:cat(i.n),m:marca(l),t:tam(i.n),r:/\bRET/i.test(i.n)?0:1,v:i.v??VENTAS[i.c||i.n]??0}});
   const tl={},tm={},tg={};o.forEach(x=>{tl[x.l]=(tl[x.l]||0)+x.v;tm[x.m]=(tm[x.m]||0)+x.v;tg[x.g]=(tg[x.g]||0)+x.v});
   return o.sort((x,y)=>(x.g==='Otros')-(y.g==='Otros')||tg[y.g]-tg[x.g]||x.g.localeCompare(y.g,'es')||tm[y.m]-tm[x.m]||x.m.localeCompare(y.m,'es')||tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
-let st={fecha:new Date().toISOString().slice(0,10),resp:'',items:ordenar(sample.map(([c,n,s])=>({c,n,s,k:null}))),f:'todos'};
-try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
-const enCat=i=>sample.some(([c,n])=>(c&&String(c)===String(i.c))||n===i.n);
-{const f=sample.filter(([c,n])=>!st.items.some(i=>(c&&String(i.c)===String(c))||i.n===n));if(f.length)st.items=ordenar(st.items.concat(f.map(([c,n,s])=>({c,n,s,k:null}))))}
+const SB='https://sdpysvowvwucjfnyosuf.supabase.co',KEY_SB='sb_publishable_Px9Uz083rGIy3drTUvlDdw_otNlwCvs';
+const CATK='conteo_guaripola_cat',BAK=KEY+'_bak',MAXQ=500;
+const hoy=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
+const uid=()=>crypto.randomUUID?crypto.randomUUID():'10000000-1000-4000-8000-100000000000'.replace(/[018]/g,c=>(c^crypto.getRandomValues(new Uint8Array(1))[0]&15>>c/4).toString(16));
+const kOf=i=>i.c?String(i.c):'N:'+i.n.toUpperCase();
 const $=id=>document.getElementById(id);
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
 const fmt=n=>(n>0?'+':'')+n;
+const gs=n=>Math.round(n).toLocaleString('es-PY');
+let SECT=[];
+const grp=i=>SECT.length?(i.sec&&SECT.includes(i.sec)?i.sec:'Sin sector'):cat(i.n);
+function ordenarTodo(a){a=ordenar(a);if(SECT.length){const ix=i=>{const p=SECT.indexOf(i.sec);return p<0?1e6:p};
+  a=a.map((i,n)=>({i,n})).sort((x,y)=>ix(x.i)-ix(y.i)||(x.i.o??1e6)-(y.i.o??1e6)||x.n-y.n).map(x=>x.i)}return a}
+const nuevo=()=>({id:uid(),fecha:hoy(),resp:'',items:[],f:'todos',g:'',rec:[],sent:null,q:null,dirty:false});
+let st=nuevo();
+try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
+if(!st.id)st.id=uid();if(!st.rec)st.rec=[];
+let catalogo=null;try{catalogo=JSON.parse(localStorage.getItem(CATK))}catch(e){}
+function aplicarCatalogo(cg){
+  const prods=cg?cg.productos:sample.map(([c,n])=>({c,n}));SECT=cg&&cg.sectores||[];
+  const idx=new Map(st.items.map(i=>[kOf(i),i])),vistos=new Set(),out=[];
+  prods.forEach(p=>{const k=kOf(p);if(vistos.has(k))return;vistos.add(k);
+    const i=idx.get(k)||{c:p.c||'',n:p.n,k:null};
+    Object.assign(i,{n:p.n,v:p.v,e:p.e,sec:p.sec,o:p.o});delete i.man;out.push(i)});
+  st.items.forEach(i=>{if(!vistos.has(kOf(i))&&(i.k!=null||i.man)){i.man=true;out.push(i)}});
+  st.items=ordenarTodo(out);llenarGrupos();save();render();
+}
+async function cargarCatalogo(){
+  try{const cg=await rpc('conteos_catalogo',{});if(cg&&cg.productos&&cg.productos.length){catalogo=cg;
+    try{localStorage.setItem(CATK,JSON.stringify(cg))}catch(e){}aplicarCatalogo(cg)}}catch(e){}
+}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
+const rpc=async(fn,body)=>{const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY_SB,Authorization:'Bearer '+KEY_SB,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>null);if(!r.ok){const m=(j&&j.message)||'';const e=new Error(/pin_incorrecto/.test(m)?'PIN incorrecto.':/bloqueado/.test(m)?'Demasiados intentos. Esperá 15 minutos.':'No se pudo conectar. Probá de nuevo.');e.red=!/pin|bloqueado/.test(m);throw e}return j};
+function llenarGrupos(){const s=$('selCat');s.innerHTML='';
+  const o0=document.createElement('option');o0.value='';o0.textContent=SECT.length?'Todos los sectores':'Todas las categorías';s.appendChild(o0);
+  [...new Set(st.items.map(grp))].forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;s.appendChild(o)});
+  if(st.g&&![...s.options].some(o=>o.value===st.g))st.g='';s.value=st.g||''}
+function stats(){const tot=st.items.length,cont=st.items.filter(i=>i.k!=null).length;
+  $('sTot').textContent=tot;$('sCont').textContent=cont;$('sDif').textContent=tot-cont;
+  document.querySelectorAll('.cat[data-g]').forEach(h=>{const its=st.items.filter(i=>grp(i)===h.dataset.g);h.lastChild.textContent=its.filter(i=>i.k!=null).length+'/'+its.length});
+  $('fRec').hidden=!st.rec.length;$('fRec').textContent='A recontar ('+st.rec.length+')';
+  const m=$('sendMsg');if(st.q)m.textContent='Pendiente de enviar (sin conexión). Se envía solo al volver internet.';
+  else if(st.sent)m.textContent='Enviado ✓ '+st.sent+(st.dirty?' · hay cambios sin enviar':'');
+}
+let EDIT=false;
 function render(){
   $('fecha').value=st.fecha;$('resp').value=st.resp;
   const q=$('q').value.trim().toLowerCase();
-  let tot=st.items.length,cont=st.items.filter(i=>i.k!=null).length;
-  $('sTot').textContent=tot;$('sCont').textContent=cont;$('sDif').textContent=tot-cont;
   document.querySelectorAll('#filt button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.f===st.f));
   const rows=st.items.map((i,ix)=>({i,ix})).filter(({i})=>{
     if(st.f==='pend'&&i.k!=null)return false;
-    if(st.g&&cat(i.n)!==st.g)return false;
+    if(st.f==='rec'&&!st.rec.includes(kOf(i)))return false;
+    if(st.g&&grp(i)!==st.g)return false;
     return !q||i.n.toLowerCase().includes(q)||String(i.c).includes(q);
   });
-  const L=$('list');
-  L.innerHTML='<div class="row head"><span>Producto</span><span class="num">Cantidad</span></div>';
+  const L=$('list');stats();
+  L.innerHTML='<div class="row head"><span>Producto</span><span class="num">'+(EDIT?'Sector / orden':'Cantidad')+'</span></div>';
   if(!rows.length){L.insertAdjacentHTML('beforeend','<div class="empty">Sin productos en este filtro.</div>');return}
-  const cc={};st.items.forEach(i=>{const g=cat(i.n);cc[g]=cc[g]||[0,0];cc[g][1]++;if(i.k!=null)cc[g][0]++});
   let prev=null;
   rows.forEach(({i,ix})=>{
-    const g=cat(i.n);if(g!==prev){prev=g;const h=document.createElement('div');h.className='cat';
-      h.innerHTML='<span></span><small></small>';h.firstChild.textContent=g;h.lastChild.textContent=cc[g][0]+'/'+cc[g][1];L.appendChild(h)}
-    const r=document.createElement('div');r.className='row'+(i.k!=null?' done':'');
-    r.innerHTML=`<div class="name"><div></div><small></small></div>      <input class="cnt" id="c${ix}" type="number" inputmode="decimal" value="${i.k??''}" aria-label="Conteo">`;
-    r.querySelector('.name div').textContent=i.n;r.querySelector('small').textContent=i.c||'';
-    const inp=r.querySelector('input');
-    inp.addEventListener('change',()=>{i.k=inp.value===''?null:Number(inp.value);save();render();
-      const nx=document.querySelectorAll('.row input.cnt')[[...document.querySelectorAll('.row input.cnt')].findIndex(x=>x.id==='c'+ix)+1];if(nx)nx.focus()});
-    inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}});
+    const g=grp(i);if(g!==prev){prev=g;const h=document.createElement('div');h.className='cat';h.dataset.g=g;
+      h.innerHTML='<span></span><small></small>';h.firstChild.textContent=g;L.appendChild(h)}
+    const r=document.createElement('div');r.className='row'+(i.k!=null?' done':'')+(st.rec.includes(kOf(i))?' rec':'');r.dataset.ix=ix;
+    r.innerHTML='<div class="name"><div></div><small></small><span class="packs"></span></div>';
+    r.querySelector('.name div').textContent=i.n;r.querySelector('small').textContent=(i.c||'')+(st.rec.includes(kOf(i))?' · RECONTAR':'');
+    if(EDIT){editCell(r,i,ix)}else{
+      const inp=document.createElement('input');inp.className='cnt';inp.id='c'+ix;inp.type='text';inp.inputMode='numeric';inp.pattern='[0-9]*';
+      inp.autocomplete='off';inp.value=i.k??'';inp.setAttribute('aria-label','Conteo');r.appendChild(inp);
+      inp.addEventListener('change',()=>{if(setK(i,inp.value,r))siguiente(ix)});
+      inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}});
+      (i.e||[]).forEach(n=>{const b=document.createElement('button');b.type='button';b.className='pk';b.textContent='+'+n;b.title='Sumar una caja de '+n;
+        b.onclick=()=>{setK(i,String((i.k||0)+n),r,true);inp.value=i.k};r.querySelector('.packs').appendChild(b)});
+    }
     L.appendChild(r);
   });
 }
+function setK(i,v,r,sinConf){v=String(v).trim();
+  if(v===''){i.k=null}else{
+    if(!/^\d+$/.test(v)){alert('Solo números enteros, sin puntos ni signos.');r.querySelector('input').value=i.k??'';return false}
+    const n=Number(v);
+    if(n>MAXQ&&!sinConf&&!confirm(i.n+'\n\n¿Seguro que son '+n+' unidades?')){r.querySelector('input').value=i.k??'';return false}
+    i.k=n}
+  i.t=Date.now();const kk=kOf(i);if(st.rec.includes(kk)){i.r=true;st.rec=st.rec.filter(x=>x!==kk);r.classList.remove('rec')}
+  if(st.sent)st.dirty=true;r.classList.toggle('done',i.k!=null);save();stats();return true}
+function siguiente(ix){const a=[...document.querySelectorAll('.row input.cnt')];const p=a.findIndex(x=>x.id==='c'+ix);if(a[p+1]){a[p+1].focus();a[p+1].select()}}
 $('fecha').onchange=e=>{st.fecha=e.target.value;save()};
 $('resp').oninput=e=>{st.resp=e.target.value;save()};
 $('q').oninput=render;
-CATS.map(c=>c[0]).concat('Otros').filter(g=>st.items.some(i=>cat(i.n)===g)).sort((a,b)=>st.items.findIndex(i=>cat(i.n)===a)-st.items.findIndex(i=>cat(i.n)===b))
-  .forEach(g=>{const o=document.createElement('option');o.value=g;o.textContent=g;$('selCat').appendChild(o)});
-$('selCat').value=st.g||'';$('selCat').onchange=e=>{st.g=e.target.value;save();render()};
+$('selCat').onchange=e=>{st.g=e.target.value;save();render()};
 $('filt').onclick=e=>{const b=e.target.closest('button');if(b){st.f=b.dataset.f;save();render()}};
 $('add').onsubmit=e=>{
-  e.preventDefault();const v=$('aName').value.trim();const n=Number($('aQty').value||1);if(!v)return;
+  e.preventDefault();const v=$('aName').value.trim(),qv=$('aQty').value.trim()||'1';if(!v)return;
+  if(!/^\d+$/.test(qv)){alert('Cantidad: solo números enteros.');return}
   let it=st.items.find(i=>String(i.c)===v||i.n.toLowerCase()===v.toLowerCase());
-  if(!it){it={c:/^\d+$/.test(v)?v:'',n:/^\d+$/.test(v)?'Código '+v:v,s:0,k:0};st.items.push(it)}
-  it.k=(it.k||0)+n;$('aName').value='';$('aQty').value='';$('aName').focus();save();render();
+  if(!it){if(!confirm('"'+v+'" no está en la lista. ¿Agregarlo como producto nuevo?'))return;
+    it={c:/^\d+$/.test(v)?v:'',n:/^\d+$/.test(v)?'Código '+v:v,k:null,man:true};st.items.push(it)}
+  const n=(it.k||0)+Number(qv);if(Number(qv)>MAXQ&&!confirm('¿Seguro que son '+qv+' unidades?'))return;
+  it.k=n;it.t=Date.now();if(st.sent)st.dirty=true;$('aName').value='';$('aQty').value='';$('aName').focus();save();render();
+  $('sendMsg').textContent=it.n+': '+it.k;
 };
-function show(note,txt,apply){$('outBox').hidden=false;$('outNote').textContent=note;$('out').value=txt;$('bApply').hidden=!apply;$('out').focus();$('out').select()}
+function show(note,txt){$('outBox').hidden=false;$('outNote').textContent=note;$('out').value=txt;$('out').focus();$('out').select()}
 $('bCsv').onclick=()=>show('CSV listo para Excel.',['codigo;producto;cantidad',...st.items.map(i=>[i.c,i.n,i.k??''].join(';'))].join('\n'));
 const resumen=()=>{const c=st.items.filter(i=>i.k!=null);
-  return `Conteo ${st.fecha}${st.resp?' · '+st.resp:''}\nContados: ${c.length}/${st.items.length}\n`+c.map(i=>`• ${i.n}: ${i.k}`).join('\n')};
+  return `Conteo ${st.fecha}${st.resp?' · '+st.resp:''}${st.g?' · '+st.g:''}\nContados: ${c.length}/${st.items.length}\n`+c.map(i=>`• ${i.n}: ${i.k}`).join('\n')};
 $('bWa').addEventListener('click',()=>{$('bWa').href='https://wa.me/?text='+encodeURIComponent(resumen())});
-$('bResumen').onclick=()=>{
-  show('Resumen para enviar.',resumen());
-};
-$('bPaste').onclick=()=>show('Pegá una línea por producto: codigo;producto. Reemplaza la lista actual.','',true);
-$('bApply').onclick=()=>{
-  const it=$('out').value.split('\n').map(l=>l.split(/[;\t]/).map(x=>x.trim())).filter(a=>a.length>=2&&a[1])
-    .map(a=>({c:a[0],n:a[1],s:Number((a[2]||'0').replace(',','.'))||0,k:null}));
-  if(it.length){st.items=ordenar(it);save();render();$('outBox').hidden=true}
-};
+$('bResumen').onclick=()=>show('Resumen para enviar.',resumen());
 $('bCopy').onclick=()=>{navigator.clipboard.writeText($('out').value).then(()=>$('bCopy').textContent='Copiado').catch(()=>$('out').select());setTimeout(()=>$('bCopy').textContent='Copiar',1500)};
 $('bClose').onclick=()=>$('outBox').hidden=true;
-$('bReset').onclick=()=>$('resetBox').hidden=false;
+// Nuevo conteo: confirmar escribiendo BORRAR, con copia para restaurar
+$('bReset').onclick=()=>{$('resetBox').hidden=false;$('rTxt').value='';$('rWarn').textContent=st.q?'Ojo: este conteo todavía no se pudo enviar.':(st.items.some(i=>i.k!=null)&&(!st.sent||st.dirty)?'Ojo: hay cantidades sin enviar.':'');$('rTxt').focus()};
 $('rNo').onclick=()=>$('resetBox').hidden=true;
-$('rYes').onclick=()=>{st.items.forEach(i=>i.k=null);st.fecha=new Date().toISOString().slice(0,10);$('resetBox').hidden=true;save();render()};
-render();
-// Historial y aplicar al inventario
-const rpc=async(fn,body)=>{const r=await fetch(SB+'/rest/v1/rpc/'+fn,{method:'POST',headers:{apikey:KEY_SB,Authorization:'Bearer '+KEY_SB,'Content-Type':'application/json'},body:JSON.stringify(body)});
-  const j=await r.json().catch(()=>null);if(!r.ok){const m=(j&&j.message)||'';throw new Error(/pin_incorrecto/.test(m)?'PIN incorrecto.':/bloqueado/.test(m)?'Demasiados intentos. Esperá 15 minutos.':'No se pudo conectar. Probá de nuevo.')}return j};
-const gs=n=>Math.round(n).toLocaleString('es-PY');
-let PIN='';
+$('rYes').onclick=()=>{if($('rTxt').value.trim().toUpperCase()!=='BORRAR'){$('rTxt').focus();return}
+  try{localStorage.setItem(BAK,JSON.stringify(st))}catch(e){}
+  const keep=st.items.filter(i=>!i.man).map(i=>Object.assign(i,{k:null,t:null,r:null}));
+  st=Object.assign(nuevo(),{resp:st.resp,items:keep,g:st.g});$('resetBox').hidden=true;save();render();$('bRestore').hidden=false};
+$('bRestore').hidden=!localStorage.getItem(BAK);
+$('bRestore').onclick=()=>{if(!confirm('¿Volver al conteo anterior? Se reemplaza el actual.'))return;
+  try{const b=JSON.parse(localStorage.getItem(BAK));if(b&&b.items){localStorage.setItem(BAK,JSON.stringify(st));st=b;save();aplicarCatalogo(catalogo)}}catch(e){}};
+// Enviar: revisa pendientes, envío idempotente, cola sin internet, recontar
+function pendientes(){return st.items.filter(i=>i.k==null&&(!st.g||grp(i)===st.g))}
+$('bSend').onclick=()=>{
+  const m=$('sendMsg');
+  if(!st.items.some(i=>i.k!=null)){m.textContent='Cargá al menos un producto.';return}
+  if(!st.resp.trim()){m.textContent='Poné tu nombre en Responsable.';$('resp').focus();return}
+  const p=pendientes();
+  if(p.length){$('pendBox').hidden=false;$('pendTxt').textContent=`Faltan ${p.length} productos sin contar${st.g?' en '+st.g:''}.`;$('pendBox').scrollIntoView({block:'center'});return}
+  enviar();
+};
+$('pVer').onclick=()=>{$('pendBox').hidden=true;st.f='pend';save();render();window.scrollTo(0,0)};
+$('pCero').onclick=()=>{const t=Date.now();pendientes().forEach(i=>{i.k=0;i.t=t});$('pendBox').hidden=true;save();render();enviar()};
+$('pIgual').onclick=()=>{$('pendBox').hidden=true;enviar()};
+let enviando=false;
+async function enviar(){
+  st.q={p_id:st.id,p_fecha:st.fecha,p_resp:st.resp.trim().slice(0,80),p_sector:SECT.length?st.g||null:null,p_total:st.items.length,
+    p_items:st.items.filter(i=>i.k!=null).map(i=>({c:i.c||'',n:i.n,k:i.k,t:i.t||null,r:i.r||null}))};
+  st.dirty=false;save();await vaciarCola();
+}
+async function vaciarCola(){
+  if(!st.q||enviando)return;enviando=true;const m=$('sendMsg');$('bSend').disabled=true;m.textContent='Enviando…';
+  try{const x=await rpc('conteos_enviar',st.q);
+    if(!x.ok){st.q=null;m.textContent=x.error==='ya_aplicado'?'Este conteo ya fue aplicado al inventario. Empezá uno nuevo.':x.error==='vencido'?'Este conteo tiene más de 48 h. Empezá uno nuevo.':x.error==='cantidad_invalida'?'Cantidad inválida en '+x.n+'.':'No se pudo enviar ('+x.error+').';save();return}
+    st.q=null;st.sent=new Date().toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'});
+    st.rec=(x.recontar||[]).map(kOf);save();
+    if(st.rec.length){st.f='rec';render();m.textContent='Enviado ✓ — recontá '+(st.rec.length>1?'los '+st.rec.length+' productos marcados':'el producto marcado')+' y volvé a enviar.';window.scrollTo(0,0)}else stats();
+  }catch(e){m.textContent='Sin conexión: quedó guardado y se envía solo al volver internet.'}
+  finally{enviando=false;$('bSend').disabled=false}
+}
+addEventListener('online',vaciarCola);setInterval(vaciarCola,30000);
+addEventListener('beforeunload',e=>{if(st.q){e.preventDefault();e.returnValue=''}});
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+// Escanear código de barras
+let scanStop=null;
+$('bScan').onclick=async()=>{const box=$('scanBox'),v=$('scanVid'),m=$('scanMsg');box.hidden=false;m.textContent='Apuntá al código…';
+  try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});v.srcObject=s;await v.play();
+    let det=null,zx=null,on=true;
+    scanStop=()=>{on=false;s.getTracks().forEach(t=>t.stop());box.hidden=true};
+    if('BarcodeDetector' in window)det=new BarcodeDetector();
+    else{await new Promise((ok,ko)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js';sc.onload=ok;sc.onerror=ko;document.head.appendChild(sc)});zx=new ZXing.MultiFormatReader()}
+    const cv=document.createElement('canvas');
+    const loop=async()=>{if(!on)return;let code=null;
+      try{if(det){const r=await det.detect(v);if(r[0])code=r[0].rawValue}
+        else{cv.width=v.videoWidth;cv.height=v.videoHeight;cv.getContext('2d').drawImage(v,0,0);try{code=zx.decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(new ZXing.HTMLCanvasElementLuminanceSource(cv)))).getText()}catch(e){}}}catch(e){}
+      if(code){scanStop();irA(code)}else setTimeout(loop,250)};loop();
+  }catch(e){m.textContent='No se pudo abrir la cámara. Escribí el código abajo.'}};
+$('scanX').onclick=()=>{scanStop?scanStop():$('scanBox').hidden=true};
+function irA(code){const ix=st.items.findIndex(i=>String(i.c)===code);
+  if(ix<0){$('aName').value=code;$('aQty').focus();$('sendMsg').textContent='Código '+code+' no está en la lista.';return}
+  st.f='todos';st.g='';$('selCat').value='';$('q').value='';render();
+  const inp=$('c'+ix);inp.scrollIntoView({block:'center'});inp.focus();inp.closest('.row').classList.add('hit');setTimeout(()=>inp.closest('.row')&&inp.closest('.row').classList.remove('hit'),1500)}
+// Ordenar recorrido (con PIN)
+function editCell(r,i,ix){const w=document.createElement('div');w.className='ed';
+  const s=document.createElement('select');['',...SECT].forEach(x=>{const o=document.createElement('option');o.value=x;o.textContent=x||'Sin sector';s.appendChild(o)});
+  s.value=SECT.includes(i.sec)?i.sec:'';s.onchange=()=>{numerar();i.sec=s.value||null;st.items=ordenarTodo(st.items);render()};
+  const up=document.createElement('button');up.type='button';up.className='pk';up.textContent='↑';up.onclick=()=>mover(ix,-1);
+  const dn=document.createElement('button');dn.type='button';dn.className='pk';dn.textContent='↓';dn.onclick=()=>mover(ix,1);
+  w.append(s,up,dn);r.appendChild(w)}
+function numerar(){st.items.forEach((i,n)=>i.o=n)}
+function mover(ix,d){const a=st.items,g=grp(a[ix]);let j=ix+d;while(a[j]&&grp(a[j])!==g)j+=d;if(!a[j])return;
+  [a[ix],a[j]]=[a[j],a[ix]];numerar();render()}
+$('bOrden').onclick=()=>{EDIT=true;$('ordBox').hidden=false;$('ordSec').value=SECT.join('\n');st.f='todos';numerar();render();window.scrollTo(0,0)};
+$('ordSec').onchange=()=>{SECT=$('ordSec').value.split('\n').map(x=>x.trim()).filter(Boolean).slice(0,30);numerar();st.items=ordenarTodo(st.items);llenarGrupos();render()};
+$('ordNo').onclick=()=>{EDIT=false;$('ordBox').hidden=true;aplicarCatalogo(catalogo)};
+$('ordSi').onclick=async()=>{const m=$('ordMsg');m.textContent='Guardando…';numerar();
+  try{await rpc('conteos_guardar_orden',{p_pin:PIN,p_sectores:SECT,p_orden:st.items.filter(i=>!i.man).map(i=>({clave:i.c?String(i.c):'N:'+i.n.toUpperCase(),sec:i.sec||'',o:i.o}))});
+    EDIT=false;$('ordBox').hidden=true;m.textContent='';await cargarCatalogo();render()}catch(e){m.textContent=e.message}};
+// Historial, aplicar (uno o varios), revertir
+let PIN='',HIST=[];
 $('bHist').onclick=()=>{$('hist').hidden=!$('hist').hidden;if(!$('hist').hidden)$('pin').focus()};
-async function cargarHist(){
+const fechaTxt=f=>f.split('-').reverse().join('/');
+function fusion(es){const m=new Map();es.forEach(e=>e.items.forEach(i=>{if(!i.pid)return;const x=m.get(i.pid)||{n:i.n,k:0,s:i.s,t:-1,veces:0};
+  x.k+=i.k;x.veces++;const t=i.t||Date.parse(e.created_at);if(t>x.t){x.t=t;x.s=i.s}m.set(i.pid,x)}));return [...m.values()]}
+async function cargarHist(fin){
   const m=$('hMsg');m.textContent='Cargando…';
-  try{const d=await rpc('conteos_listar2',{p_pin:PIN,p_desde:$('hDesde').value||null});
-    m.textContent=d.length?'':'No hay conteos en ese rango.';
+  try{HIST=await rpc('conteos_listar2',{p_pin:PIN,p_desde:$('hDesde').value||null});
+    m.textContent=fin||(HIST.length?'':'No hay conteos en ese rango.');$('bOrden').hidden=false;
     const L=$('hList');L.innerHTML='';
-    d.forEach(e=>{
-      const conDif=e.items.filter(i=>i.pid&&Math.round(i.k)!==i.s).length, sinProd=e.items.filter(i=>!i.pid).length;
+    HIST.forEach(e=>{
+      const conDif=e.items.filter(i=>i.pid&&i.k!==i.s).length, sinProd=e.items.filter(i=>!i.pid).length;
       const r=document.createElement('div');r.className='row';r.style.gridTemplateColumns='1fr';r.style.gap='6px';
-      r.innerHTML='<div class="name"><div></div><small></small></div><div class="tools"></div><div class="confirm" hidden></div>';
-      r.querySelector('.name div').textContent=e.fecha.split('-').reverse().join('/')+' · '+e.responsable;
-      r.querySelector('small').textContent=new Date(e.created_at).toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'})+' · '+e.contados+' contados · '+conDif+' con diferencia'+(sinProd?' · '+sinProd+' sin vincular':'')+' · '+(e.aplicado_at?'APLICADO':'pendiente');
+      r.innerHTML='<label class="name" style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" class="hSel"><span><div></div><small></small></span></label><div class="tools"></div><div class="confirm" hidden></div>';
+      const cb=r.querySelector('.hSel');cb.value=e.id;cb.hidden=!!e.aplicado_at;
+      r.querySelector('.name div').textContent=fechaTxt(e.fecha)+' · '+e.responsable+(e.sector?' · '+e.sector:'');
+      r.querySelector('small').textContent=new Date(e.updated_at||e.created_at).toLocaleString('es-PY',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+' · '+e.contados+'/'+(e.total||'?')+' contados · '+conDif+' con diferencia'+(sinProd?' · '+sinProd+' sin vincular':'')+' · '+(e.aplicado_at?'APLICADO':e.revertido_at?'REVERTIDO (pendiente)':'pendiente');
       const T=r.querySelector('.tools'),C=r.querySelector('.confirm');
-      const bv=document.createElement('button');bv.className='btn ghost';bv.textContent='Ver diferencias';T.appendChild(bv);
-      bv.onclick=()=>show('Conteo de '+e.responsable+' · diferencias contra el stock del sistema al momento de contar.',
-        e.items.filter(i=>!i.pid||Math.round(i.k)!==i.s).map(i=>i.pid?`• ${i.n}: sistema ${i.s} / contado ${i.k} (${fmt(Math.round(i.k)-i.s)})`:`• ${i.n}: ${i.k} (no está en el sistema, se saltea)`).join('\n')||'Sin diferencias.');
-      const bc=document.createElement('button');bc.className='btn ghost';bc.textContent='CSV';T.appendChild(bc);
-      bc.onclick=()=>show('CSV.',['codigo;producto;sistema;contado;diferencia',...e.items.map(i=>[i.c,i.n,i.s??'',i.k,i.pid?Math.round(i.k)-i.s:''].join(';'))].join('\n'));
-      if(!e.aplicado_at){
-        const ba=document.createElement('button');ba.className='btn primary';ba.textContent='Aplicar al inventario';T.appendChild(ba);
-        ba.onclick=()=>{C.hidden=false;C.innerHTML='';C.append(`Se van a ajustar ${conDif} productos en la bodega. `);
-          const y=document.createElement('button');y.className='btn primary';y.textContent='Sí, aplicar';
-          const n=document.createElement('button');n.className='btn ghost';n.textContent='Cancelar';C.append(y,n);
-          n.onclick=()=>C.hidden=true;
-          y.onclick=async()=>{y.disabled=true;y.textContent='Aplicando…';
-            try{const x=await rpc('conteos_aplicar',{p_pin:PIN,p_id:e.id});
-              if(!x.ok)throw new Error(x.error==='ya_aplicado'?'Este conteo ya fue aplicado.':'No se pudo aplicar.');
-              m.textContent=`Aplicado ✓ ${x.aplicados} productos · dif. ${fmt(x.diferencia)} u · Gs. ${gs(x.diferencia_monto)}`+(x.omitidos?` · ${x.omitidos} salteados`:'');
-              cargarHist();
-            }catch(err){C.textContent=err.message}};
-        };
-      }
+      const b=(t,cls,fn)=>{const x=document.createElement('button');x.className='btn '+cls;x.textContent=t;x.onclick=fn;T.appendChild(x);return x};
+      b('Ver diferencias','ghost',()=>show('Conteo de '+e.responsable+' · diferencias contra el stock del sistema a la hora de contar cada producto.',
+        e.items.filter(i=>!i.pid||i.k!==i.s).map(i=>i.pid?`• ${i.n}: sistema ${i.s} / contado ${i.k} (${fmt(i.k-i.s)})`:`• ${i.n}: ${i.k} (no está en el sistema, se saltea)`).join('\n')||'Sin diferencias.'));
+      b('CSV','ghost',()=>show('CSV.',['codigo;producto;sistema;contado;diferencia',...e.items.map(i=>[i.c,i.n,i.s??'',i.k,i.pid?i.k-i.s:''].join(';'))].join('\n')));
+      if(!e.aplicado_at)b('Aplicar al inventario','primary',()=>confirmarAplicar([e],C));
+      else b('Revertir','ghost',()=>confirmarRevertir(e,C));
       L.appendChild(r);
     });
+    $('hMulti').hidden=HIST.filter(e=>!e.aplicado_at).length<2;
   }catch(err){m.textContent=err.message}
 }
+$('hMulti').onclick=()=>{const ids=[...document.querySelectorAll('.hSel:checked')].map(x=>x.value);
+  if(ids.length<2){$('hMsg').textContent='Marcá al menos 2 conteos para aplicarlos juntos.';return}
+  confirmarAplicar(HIST.filter(e=>ids.includes(e.id)),$('hMultiC'))};
+function pinBox(C,txt,boton,fn){C.hidden=false;C.innerHTML='';const p=document.createElement('div');p.style.cssText='display:grid;gap:6px;width:100%';
+  p.innerHTML='<div class="warnbox"></div><label class="ok" hidden><input type="checkbox"> Revisé las advertencias</label><div class="meta"><input type="password" inputmode="numeric" placeholder="PIN otra vez" style="width:140px"></div>';
+  p.firstChild.innerText=txt.join('\n');const chk=p.querySelector('.ok');chk.hidden=!txt.some(t=>t.startsWith('⚠'));
+  const y=document.createElement('button');y.className='btn primary';y.textContent=boton;const n=document.createElement('button');n.className='btn ghost';n.textContent='Cancelar';
+  p.querySelector('.meta').append(y,n);C.appendChild(p);n.onclick=()=>C.hidden=true;
+  y.onclick=async()=>{const pin=p.querySelector('input[type=password]').value.trim();
+    if(!chk.hidden&&!chk.querySelector('input').checked){chk.style.color='var(--bad)';return}
+    if(pin!==PIN){p.firstChild.innerText='PIN distinto al ingresado arriba.';return}
+    y.disabled=true;y.textContent='Procesando…';try{await fn()}catch(err){p.firstChild.innerText=err.message;y.disabled=false;y.textContent=boton}}}
+function confirmarAplicar(es,C){
+  const f=fusion(es),w=[],ahora=Date.now();
+  const cont=es.reduce((a,e)=>a+e.contados,0),tot=Math.max(...es.map(e=>e.total||0));
+  w.push(`Se ajustan ${f.filter(x=>x.k!==x.s).length} productos (${es.length} conteo${es.length>1?'s':''}: ${es.map(e=>e.responsable+(e.sector?' / '+e.sector:'')).join(', ')}).`);
+  const viejo=es.filter(e=>ahora-Date.parse(e.updated_at||e.created_at)>864e5);
+  if(viejo.length)w.push('⚠ Conteo de hace más de 24 h: el stock pudo cambiar mucho desde entonces.');
+  if(tot&&cont/tot<.8)w.push(`⚠ Incompleto: ${cont} de ${tot} productos contados (${Math.round(cont/tot*100)} %).`);
+  const dup=f.filter(x=>x.veces>1);if(dup.length)w.push(`⚠ ${dup.length} productos aparecen en más de un conteo y se van a SUMAR (ej. ${dup.slice(0,3).map(x=>x.n).join(', ')}).`);
+  const top=f.filter(x=>Math.abs(x.k-x.s)>=10).sort((a,b)=>Math.abs(b.k-b.s)-Math.abs(a.k-a.s)).slice(0,5);
+  if(top.length)w.push('⚠ Diferencias grandes:\n'+top.map(x=>`   ${x.n}: sistema ${x.s} → contado ${x.k} (${fmt(x.k-x.s)})`).join('\n'));
+  pinBox(C,w,'Sí, aplicar',async()=>{const x=await rpc('conteos_aplicar_varios',{p_pin:PIN,p_ids:es.map(e=>e.id)});
+    if(!x.ok)throw new Error(x.error==='ya_aplicado'?'Ya fue aplicado.':'No se pudo aplicar ('+x.error+').');
+    C.hidden=true;cargarHist(`Aplicado ✓ ${x.aplicados} productos · dif. ${fmt(x.diferencia)} u · Gs. ${gs(x.diferencia_monto)}`+(x.omitidos?` · ${x.omitidos} salteados`:''))})}
+function confirmarRevertir(e,C){const otros=HIST.filter(x=>x.inventario_id&&x.inventario_id===e.inventario_id&&x.id!==e.id);
+  pinBox(C,['⚠ Se deshace el ajuste de stock de este inventario'+(otros.length?` (incluye ${otros.length} conteo(s) aplicados junto con este)`:'')+'. Queda registrado como reversión y el conteo vuelve a pendiente.'],'Sí, revertir',async()=>{
+    const x=await rpc('conteos_revertir',{p_pin:PIN,p_id:e.id});if(!x.ok)throw new Error('No se pudo revertir ('+x.error+').');
+    C.hidden=true;cargarHist(`Revertido ✓ ${x.revertidos} productos`)})}
 $('pinF').onsubmit=e=>{e.preventDefault();PIN=$('pin').value.trim();if(PIN)cargarHist()};
-// Envío a Supabase (tabla bodega_conteos)
-const SB='https://sdpysvowvwucjfnyosuf.supabase.co',KEY_SB='sb_publishable_Px9Uz083rGIy3drTUvlDdw_otNlwCvs';
-$('bSend').onclick=async()=>{
-  const m=$('sendMsg'),c=st.items.filter(i=>i.k!=null);
-  if(!c.length){m.textContent='Cargá al menos un producto.';return}
-  if(!st.resp.trim()){m.textContent='Poné tu nombre en Responsable.';$('resp').focus();return}
-  $('bSend').disabled=true;m.textContent='Enviando…';
-  try{const r=await fetch(SB+'/rest/v1/bodega_conteos',{method:'POST',headers:{apikey:KEY_SB,Authorization:'Bearer '+KEY_SB,'Content-Type':'application/json',Prefer:'return=minimal'},
-      body:JSON.stringify({fecha:st.fecha,responsable:st.resp.trim().slice(0,80),contados:c.length,total:st.items.length,items:c.map(i=>({c:i.c||'',n:i.n,k:i.k}))})});
-    if(!r.ok)throw new Error(r.status);
-    m.textContent='Enviado ✓ '+new Date().toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'});
-  }catch(e){m.textContent='No se pudo enviar. Revisá internet y probá de nuevo (o usá WhatsApp).'}
-  $('bSend').disabled=false;
-};
+aplicarCatalogo(catalogo);cargarCatalogo();vaciarCola();
 </script>
 
 </body></html>
