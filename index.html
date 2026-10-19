@@ -39,7 +39,7 @@ h1{font-family:var(--f-display);font-size:28px;margin:0;letter-spacing:.02em;tex
 .btn.ghost{border-radius:6px;background:transparent}
 button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .list{display:grid;gap:6px}
-.row{display:grid;grid-template-columns:1fr 96px 32px;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.row{display:grid;grid-template-columns:1fr 96px;gap:8px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
 .row.head{background:transparent;border:0;padding-block:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .name{min-width:0}
 .name div{font-weight:500;overflow-wrap:anywhere}
@@ -62,7 +62,7 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
 .confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
 @media (max-width:520px){
   .stats{grid-template-columns:repeat(2,1fr)}
-  .row{grid-template-columns:1fr 90px 28px}
+  .row{grid-template-columns:1fr 90px}
   .row .sis{display:none}
   .row.head .sis{display:none}
 }
@@ -241,7 +241,7 @@ function render(){
     return !q||i.n.toLowerCase().includes(q)||String(i.c).includes(q);
   });
   const L=$('list');
-  L.innerHTML='<div class="row head"><span>Producto</span><span class="num">Cantidad</span><span></span></div>';
+  L.innerHTML='<div class="row head"><span>Producto</span><span class="num">Cantidad</span></div>';
   if(!rows.length){L.insertAdjacentHTML('beforeend','<div class="empty">Sin productos en este filtro.</div>');return}
   const cc={};st.items.forEach(i=>{const g=cat(i.n);cc[g]=cc[g]||[0,0];cc[g][1]++;if(i.k!=null)cc[g][0]++});
   let prev=null;
@@ -249,14 +249,12 @@ function render(){
     const g=cat(i.n);if(g!==prev){prev=g;const h=document.createElement('div');h.className='cat';
       h.innerHTML='<span></span><small></small>';h.firstChild.textContent=g;h.lastChild.textContent=cc[g][0]+'/'+cc[g][1];L.appendChild(h)}
     const r=document.createElement('div');r.className='row'+(i.k!=null?' done':'');
-    r.innerHTML=`<div class="name"><div></div><small></small></div>      <input class="cnt" id="c${ix}" type="number" inputmode="decimal" value="${i.k??''}" aria-label="Conteo">
-      <button class="del" aria-label="Quitar" title="Quitar">×</button>`;
+    r.innerHTML=`<div class="name"><div></div><small></small></div>      <input class="cnt" id="c${ix}" type="number" inputmode="decimal" value="${i.k??''}" aria-label="Conteo">`;
     r.querySelector('.name div').textContent=i.n;r.querySelector('small').textContent=i.c||'';
     const inp=r.querySelector('input');
     inp.addEventListener('change',()=>{i.k=inp.value===''?null:Number(inp.value);save();render();
       const nx=document.querySelectorAll('.row input.cnt')[[...document.querySelectorAll('.row input.cnt')].findIndex(x=>x.id==='c'+ix)+1];if(nx)nx.focus()});
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}});
-    r.querySelector('.del').onclick=()=>{if(enCat(i))i.k=null;else st.items.splice(ix,1);save();render()};
     L.appendChild(r);
   });
 }
