@@ -224,6 +224,8 @@ function ordenar(a){const o=a.map(i=>{const l=linea(i.n).replace(/\bCERO\b/g,'ZE
   return o.sort((x,y)=>(x.g==='Otros')-(y.g==='Otros')||tg[y.g]-tg[x.g]||x.g.localeCompare(y.g,'es')||tm[y.m]-tm[x.m]||x.m.localeCompare(y.m,'es')||tl[y.l]-tl[x.l]||x.l.localeCompare(y.l,'es')||x.t-y.t||x.r-y.r||x.i.n.localeCompare(y.i.n,'es')).map(o=>o.i)}
 let st={fecha:new Date().toISOString().slice(0,10),resp:'',items:ordenar(sample.map(([c,n,s])=>({c,n,s,k:null}))),f:'todos'};
 try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
+const enCat=i=>sample.some(([c,n])=>(c&&String(c)===String(i.c))||n===i.n);
+{const f=sample.filter(([c,n])=>!st.items.some(i=>(c&&String(i.c)===String(c))||i.n===n));if(f.length)st.items=ordenar(st.items.concat(f.map(([c,n,s])=>({c,n,s,k:null}))))}
 const $=id=>document.getElementById(id);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}};
 const fmt=n=>(n>0?'+':'')+n;
@@ -254,7 +256,7 @@ function render(){
     inp.addEventListener('change',()=>{i.k=inp.value===''?null:Number(inp.value);save();render();
       const nx=document.querySelectorAll('.row input.cnt')[[...document.querySelectorAll('.row input.cnt')].findIndex(x=>x.id==='c'+ix)+1];if(nx)nx.focus()});
     inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();inp.blur()}});
-    r.querySelector('.del').onclick=()=>{st.items.splice(ix,1);save();render()};
+    r.querySelector('.del').onclick=()=>{if(enCat(i))i.k=null;else st.items.splice(ix,1);save();render()};
     L.appendChild(r);
   });
 }
