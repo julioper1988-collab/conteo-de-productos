@@ -79,7 +79,7 @@ textarea#out{width:100%;min-height:140px;font:12px var(--f-mono);background:var(
 <header>
   <h1>Conteo de stock</h1>
   <div class="meta">
-    <input id="fecha" type="date" aria-label="Fecha">
+    <input id="fecha" type="date" aria-label="Fecha" disabled>
     <input id="resp" placeholder="Responsable" aria-label="Responsable" style="flex:1">
   </div>
   <div class="stats">
@@ -251,6 +251,9 @@ const nuevo=()=>({id:uid(),fecha:hoy(),resp:'',items:[],f:'todos',g:'',rec:[],se
 let st=nuevo();
 try{const d=JSON.parse(localStorage.getItem(KEY));if(d&&d.items)st=Object.assign(st,d)}catch(e){}
 if(!st.id)st.id=uid();if(!st.rec)st.rec=[];
+const nuevoTrasEnvio=()=>{try{localStorage.setItem(BAK,JSON.stringify(st))}catch(e){}st.items.forEach(i=>{i.k=null;i.t=null;i.r=null});st=Object.assign(nuevo(),{resp:st.resp,items:st.items.filter(i=>!i.man),g:st.g});save()};
+if(st.sent&&!st.q&&!st.rec.length)nuevoTrasEnvio();
+st.fecha=hoy();
 let catalogo=null;try{catalogo=JSON.parse(localStorage.getItem(CATK))}catch(e){}
 function aplicarCatalogo(cg){
   const prods=cg?cg.productos:sample.map(([c,n])=>({c,n}));SECT=cg&&cg.sectores||[];
@@ -368,17 +371,18 @@ $('pCero').onclick=()=>{const t=Date.now();pendientes().forEach(i=>{i.k=0;i.t=t}
 $('pIgual').onclick=()=>{$('pendBox').hidden=true;enviar()};
 let enviando=false;
 async function enviar(){
-  st.q={p_id:st.id,p_fecha:st.fecha,p_resp:st.resp.trim().slice(0,80),p_sector:SECT.length?st.g||null:null,p_total:st.items.length,
+  st.fecha=hoy();st.q={p_id:st.id,p_fecha:st.fecha,p_resp:st.resp.trim().slice(0,80),p_sector:SECT.length?st.g||null:null,p_total:st.items.length,
     p_items:st.items.filter(i=>i.k!=null).map(i=>({c:i.c||'',n:i.n,k:i.k,t:i.t||null,r:i.r||null}))};
   st.dirty=false;save();await vaciarCola();
 }
 async function vaciarCola(){
   if(!st.q||enviando)return;enviando=true;const m=$('sendMsg');$('bSend').disabled=true;m.textContent='Enviando…';
   try{const x=await rpc('conteos_enviar',st.q);
+    if(!x.ok&&(x.error==='ya_aplicado'||x.error==='vencido')){st.id=uid();st.fecha=hoy();$('fecha').value=st.fecha;Object.assign(st.q,{p_id:st.id,p_fecha:st.fecha});save();enviando=false;return vaciarCola()}
     if(!x.ok){st.q=null;m.textContent=x.error==='ya_aplicado'?'Este conteo ya fue aplicado al inventario. Empezá uno nuevo.':x.error==='vencido'?'Este conteo tiene más de 48 h. Empezá uno nuevo.':x.error==='cantidad_invalida'?'Cantidad inválida en '+x.n+'.':'No se pudo enviar ('+x.error+').';save();return}
     st.q=null;st.sent=new Date().toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'});
     st.rec=(x.recontar||[]).map(kOf);save();
-    if(st.rec.length){st.f='rec';render();m.textContent='Enviado ✓ — recontá '+(st.rec.length>1?'los '+st.rec.length+' productos marcados':'el producto marcado')+' y volvé a enviar.';window.scrollTo(0,0)}else stats();
+    if(st.rec.length){st.f='rec';render();m.textContent='Enviado ✓ — recontá '+(st.rec.length>1?'los '+st.rec.length+' productos marcados':'el producto marcado')+' y volvé a enviar.';window.scrollTo(0,0)}else{nuevoTrasEnvio();render();$('bRestore').hidden=false;m.textContent='Enviado ✓ a las '+new Date().toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'})+'. Conteo nuevo listo.'}
   }catch(e){m.textContent='Sin conexión: quedó guardado y se envía solo al volver internet.'}
   finally{enviando=false;$('bSend').disabled=false}
 }
